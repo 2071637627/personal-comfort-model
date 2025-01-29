@@ -1,3 +1,6 @@
+根据你的需求，我将对代码进行重新组织和调整，确保输入变量按照五个层级分类，并且每个层级的变量都符合你的要求。以下是调整后的代码：
+调整后的代码
+Python复制
 import joblib
 import streamlit as st
 import pandas as pd
@@ -17,7 +20,7 @@ models = {
 
 # 页面配置
 st.set_page_config(
-    page_title="智能热舒适预测系统",
+    page_title="热舒适度预测系统",
     page_icon="🌡️",
     layout="wide"
 )
@@ -25,9 +28,9 @@ st.set_page_config(
 # ================= 侧边栏输入模块 =================
 with st.sidebar:
     st.header("⚙️ 参数输入面板")
-    
-    # 1. 环境基本信息
-    st.subheader("1. 环境基本信息")
+
+    # 第一层级：Basic Identifiers
+    st.subheader("1. 基础标识")
     season = st.selectbox(
         "季节",
         ["冬季 (0)", "夏季 (1)", "过渡季 (2)"],
@@ -39,8 +42,8 @@ with st.sidebar:
          "夏热冬暖 (3)", "温和地区 (4)"],
         index=0
     )
-    
-    # 2. 建筑信息
+
+    # 第二层级：Building Information
     st.subheader("2. 建筑信息")
     building_type = st.selectbox(
         "建筑类型",
@@ -49,14 +52,16 @@ with st.sidebar:
     )
     operation_mode = st.selectbox(
         "运行模式",
-        ["空调供暖 (0)", "毛细管顶棚供暖 (1)", "冷辐射顶棚供冷 (2)",
-         "对流供冷 (3)", "对流供暖 (4)", "锅炉供暖 (5)", 
-         "自然通风 (6)", "其他 (7)", "地板辐射供暖 (8)",
-         "散热器供暖 (9)", "自采暖 (10)", "分体空调 (11)"],
+        ["空调供暖 (0)", "毛细管顶棚供暖 (1)", 
+         "冷辐射顶棚供冷 (2)", "对流供冷 (3)",
+         "对流供暖 (4)", "锅炉供暖 (5)", 
+         "自然通风 (6)", "其他 (7)",
+         "地板辐射供暖 (8)", "散热器供暖 (9)",
+         "自采暖 (10)", "分体空调 (11)"],
         index=0
     )
-    
-    # 3. 人员信息
+
+    # 第三层级：Subject's Personal Information
     st.subheader("3. 人员信息")
     col1, col2 = st.columns(2)
     with col1:
@@ -74,13 +79,13 @@ with st.sidebar:
         height = st.number_input("身高 (cm)", 100, 250, 170)
     with col4:
         weight = st.number_input("体重 (kg)", 30, 150, 65)
-    
-    # 4. 热舒适参数
+
+    # 第四层级：Subjective Thermal Comfort Information
     st.subheader("4. 热舒适参数")
     clothing = st.number_input("服装热阻 (clo)", 0.0, 2.0, 1.0, 0.1)
     metabolic = st.number_input("代谢率 (met)", 0.5, 4.0, 1.2, 0.1)
-    
-    # 5. 室内外环境参数
+
+    # 第五层级：Indoor Physical Parameters
     st.subheader("5. 室内外环境参数")
     input_mode = st.radio(
         "输入模式", 
@@ -114,13 +119,13 @@ with st.sidebar:
     else:
         st.info(f"室外温度生成范围：{min_temp}°C ~ {max_temp}°C")
 
-# ================= 数据生成模块 =================
+# ================= 数据处理模块 =================
 def generate_data():
-    """生成包含室外温度的数据框"""
+    """生成输入数据框"""
     # 解析编码值
     codes = {
         'Season': int(season.split("(")[1].replace(")", "")),
-        'Climate Zone': climate_code,
+        'Climate Zone': int(climate_zone.split("(")[1].replace(")", "")),
         'Building Type': int(building_type.split("(")[1].replace(")", "")),
         'Operation Mode': int(operation_mode.split("(")[1].replace(")", "")),
         'Sex': int(sex.split("(")[1].replace(")", "")),
@@ -128,53 +133,44 @@ def generate_data():
         'Height (cm)': height,
         'Weight (kg)': weight,
         'Clothing (clo)': clothing,
-        'Metabolic (met)': metabolic,
-        'BMI': weight / ((height/100)**2)
+        'Metabolic (met)': metabolic
     }
-    
+
     # 生成环境参数
     if "手动" in input_mode:
-        indoor_temp = st.number_input("室内温度 (°C)", 10.0, 40.0, 25.0)
+        temp = st.number_input("空气温度 (°C)", 10.0, 40.0, 25.0)
         humidity = st.number_input("相对湿度 (%)", 0.0, 100.0, 50.0)
         velocity = st.number_input("空气流速 (m/s)", 0.0, 5.0, 0.1)
-        env_params = [[indoor_temp, humidity, velocity, outdoor_temp]]
+        env_params = [[temp, humidity, velocity, outdoor_temp]]  # 添加室外温度
     else:
         n_samples = int(input_mode.split("生成")[1].replace("组", ""))
         np.random.seed(42)
-        
-        indoor_temp = np.round(np.random.uniform(18, 32, n_samples), 1)
-        humidity = np.round(np.random.uniform(30, 80, n_samples), 1)
-        velocity = np.round(np.random.uniform(0, 1.5, n_samples), 2)
-        outdoor_temp = np.round(np.random.uniform(min_temp, max_temp, n_samples), 1)
-        
-        env_params = np.column_stack([indoor_temp, humidity, velocity, outdoor_temp])
-    
+        env_params = np.column_stack([
+            np.round(np.random.uniform(18, 32, n_samples), 1),
+            np.round(np.random.uniform(30, 80, n_samples), 1),
+            np.round(np.random.uniform(0, 1.5, n_samples), 2),
+            np.round(np.random.uniform(min_temp, max_temp, n_samples), 1)  # 添加室外温度
+        ])
+
     # 构建数据框
-    df = pd.DataFrame(
-        env_params,
-        columns=[
-            'Temperature (°C)', 
-            'Humidity (%)', 
-            'Velocity (m/s)',
-            'Outdoor Temp (°C)'
-        ]
-    )
+    df = pd.DataFrame(env_params, columns=[
+        'Temperature (°C)', 'Humidity (%)', 'Velocity (m/s)', 'Outdoor Temperature (°C)'
+    ])
     
-    # 添加其他参数
+    # 添加固定参数
     for col, val in codes.items():
         df[col] = val
-    
-    # 调整特征顺序
+
+    # 调整列顺序
     feature_order = [
         'Season', 'Climate Zone', 'Building Type', 'Operation Mode',
         'Sex', 'Age Group', 'Height (cm)', 'Weight (kg)',
-        'Clothing (clo)', 'Metabolic (met)', 'BMI',
-        'Temperature (°C)', 'Humidity (%)', 
-        'Velocity (m/s)', 'Outdoor Temp (°C)'
+        'Clothing (clo)', 'Metabolic (met)',
+        'Temperature (°C)', 'Humidity (%)', 'Velocity (m/s)', 'Outdoor Temperature (°C)'
     ]
     return df[feature_order]
 
-# ================= 主界面模块 =================
+# ================= 主界面显示模块 =================
 st.title("🏢 建筑热舒适度智能预测系统")
 df = generate_data()
 
@@ -184,7 +180,7 @@ with st.expander("📥 查看输入数据", expanded=True):
     st.download_button(
         label="下载输入数据",
         data=df.to_csv(index=False).encode('utf-8'),
-        file_name='thermal_comfort_input.csv'
+        file_name='input_data.csv'
     )
 
 # ================= 预测分析模块 =================
@@ -195,103 +191,12 @@ if st.button("开始预测"):
     try:
         model = models[selected_model]
         
-        # 特征验证
-        required_features = model.feature_names_in_ if hasattr(model, 'feature_names_in_') else []
-        if len(df.columns) != len(required_features):
-            st.error("特征数量不匹配！请检查：")
-            st.write(f"模型需要 {len(required_features)} 个特征，当前 {len(df.columns)} 个")
-            st.write("模型特征列表:", required_features)
-            st.write("当前特征列表:", df.columns.tolist())
-            st.stop()
-        
         # 执行预测
-        with st.spinner("预测进行中..."):
+        with st.spinner("预测进行中，请稍候..."):
             predictions = model.predict(df)
-            results_df = df.copy()
-            results_df["预测结果"] = predictions
-            results_df["舒适度评价"] = results_df["预测结果"].map({
-                0: "无需改变",
-                1: "希望更暖",
-                2: "希望更凉"
-            })
-        
-        # 显示结果
-        with st.expander("📊 查看详细预测结果", expanded=True):
-            st.dataframe(
-                results_df.style.applymap(
-                    lambda x: "#e6f3ff" if x==0 else "#ffe6e6" if x==1 else "#e6ffe6",
-                    subset=["预测结果"]
-                ),
-                height=400
-            )
-        
-        # 可视化分析
-        st.subheader("📈 分析图表")
-        
-        # 结果分布
-        col1, col2 = st.columns(2)
-        with col1:
-            fig1 = plt.figure(figsize=(8,6))
-            results_df["舒适度评价"].value_counts().plot.pie(
-                autopct="%1.1f%%",
-                colors=["#66b3ff","#ff9999","#99ff99"],
-                startangle=90
-            )
-            plt.title("预测结果分布")
-            st.pyplot(fig1)
-        
-        # 温度分布
-        with col2:
-            fig2 = plt.figure(figsize=(8,6))
-            plt.hist(results_df["Temperature (°C)"], bins=15, edgecolor="k")
-            plt.xlabel("室内温度 (°C)")
-            plt.ylabel("频次")
-            plt.title("温度分布直方图")
-            st.pyplot(fig2)
-        
-        # 室内外温度关系
-        st.subheader("🌍 室内外温度分析")
-        fig3 = plt.figure(figsize=(10,6))
-        plt.scatter(
-            results_df["Outdoor Temp (°C)"],
-            results_df["Temperature (°C)"],
-            c=results_df["预测结果"],
-            cmap="coolwarm",
-            alpha=0.7
-        )
-        plt.colorbar(label="热舒适偏好", ticks=[0,1,2]).set_ticklabels(["无需改变","希望更暖","希望更凉"])
-        plt.xlabel("室外温度 (°C)")
-        plt.ylabel("室内温度 (°C)")
-        plt.grid(linestyle="--", alpha=0.3)
-        st.pyplot(fig3)
-        
-        # 下载结果
-        st.download_button(
-            label="下载完整预测结果",
-            data=results_df.to_csv(index=False, encoding='utf-8-sig').encode('utf-8-sig'),
-            file_name=f'thermal_comfort_predictions_{selected_model}.csv',
-            mime='text/csv'
-        )
-        
-    except Exception as e:
-        st.error(f"预测失败：{str(e)}")
-        st.error("常见原因：\n1. 特征数量/顺序不匹配\n2. 模型文件损坏\n3. 输入数据超出范围")
+            proba = model.predict_proba(df) if hasattr(model, "predict_proba") else None
 
-# ================= 帮助信息 =================
-with st.expander("❓ 使用帮助"):
-    st.markdown("""
-    **使用指南：**
-    1. 在左侧面板输入所有参数
-    2. 选择数据生成模式（手动/随机）
-    3. 选择预测模型
-    4. 点击「开始预测」查看结果
-    
-    **特征说明：**
-    - BMI = 体重(kg) / (身高(m)^2)
-    - 室外温度范围根据气候分区自动调整
-    - 随机生成数据符合ASHRAE标准范围
-    
-    **技术支持：**
-    - 模型更新日期：2023-12-01
-    - 数据版本：v2.1.5
-    """)
+        # 构建结果数据框
+        results_df = df.copy()
+        results_df["预测结果"] = predictions
+        results_df["舒适度评价"] = results_df["预测结果"].map
