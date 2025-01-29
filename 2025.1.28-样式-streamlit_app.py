@@ -183,7 +183,7 @@ if st.button("预测"):
     
     input_features = df.drop(columns=["Season", "Climate Zone", "Building Type", "Operation Mode", "Sex", "Age Group"])
     
-    if isinstance(input_features, pd.DataFrame):
+if isinstance(input_features, pd.DataFrame):
     input_features = input_features.values
     
     prediction = model.predict(input_features)  # 使用选定的模型进行预测
