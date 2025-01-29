@@ -196,4 +196,65 @@ if st.button("开始预测"):
         # 构建结果数据框
         results_df = df.copy()
         results_df["预测结果"] = predictions
-        results_df["舒适度评价"] = results_df["预测结果"].map
+        # 定义舒适度评价的映射关系
+        comfort_mapping = {
+            0: "无需改变",
+            1: "希望更暖",
+            2: "希望更凉"
+        }
+        # 使用 map 函数将预测结果映射为舒适度评价
+        results_df["舒适度评价"] = results_df["预测结果"].map(comfort_mapping)
+
+        # 显示预测结果
+        with st.expander("📊 查看详细预测结果", expanded=True):
+            # 条件格式
+            def highlight_tp(val):
+                colors = {0: '#e6f3ff', 1: '#ffe6e6', 2: '#e6ffe6'}
+                return f'background-color: {colors.get(val, "")}'
+            
+            styled_df = results_df.style.applymap(highlight_tp, subset=["预测结果"])
+            st.dataframe(styled_df, height=300)
+
+        # 可视化分析
+        st.subheader("📈 分析图表")
+        col1, col2 = st.columns(2)
+
+        with col1:
+            # 预测结果分布
+            fig1 = plt.figure(figsize=(8, 6))
+            results_df["舒适度评价"].value_counts().plot.pie(
+                autopct="%1.1f%%",
+                colors=["#66b3ff", "#ff9999", "#99ff99"],
+                startangle=90
+            )
+            plt.title("预测结果分布")
+            plt.ylabel("")
+            st.pyplot(fig1)
+
+        with col2:
+            # 温度-舒适度关系
+            fig2 = plt.figure(figsize=(8, 6))
+            plt.scatter(
+                results_df["Temperature (°C)"],
+                results_df["预测结果"],
+                c=results_df["预测结果"],
+                cmap="coolwarm",
+                alpha=0.7
+            )
+            plt.colorbar(ticks=[0, 1, 2]).set_ticklabels(["无需改变", "希望更暖", "希望更凉"])
+            plt.xlabel("温度 (°C)")
+            plt.ylabel("热舒适偏好")
+            plt.grid(linestyle="--", alpha=0.3)
+            st.pyplot(fig2)
+
+        # 下载结果
+        st.download_button(
+            label="下载完整预测结果",
+            data=results_df.to_csv(index=False, encoding='utf-8-sig').encode('utf-8-sig'),
+            file_name=f'predictions_{selected_model}.csv',
+            mime='text/csv'
+        )
+
+    except Exception as e:
+        st.error(f"预测失败：{str(e)}")
+        st.error("可能原因：\n1. 输入数据格式错误\n2. 模型文件缺失\n3. 特征列不匹配")
