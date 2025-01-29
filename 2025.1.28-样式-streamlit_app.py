@@ -172,11 +172,15 @@ st.download_button(
 )
 
 # ---- 模型预测部分（示例） ----
+selected_model = st.selectbox("Select Model", list(models.keys()))
+
 if st.button("Run Prediction"):
     st.subheader("Prediction Results")
-    # 此处添加模型预测代码
+    
+# 此处添加模型预测代码
 if st.button("预测"):
     model = models[selected_model]
+    input_features = df.drop(columns=["Season", "Climate Zone", "Building Type", "Operation Mode", "Sex", "Age Group"])
     prediction = model.predict(input_features)  # 使用选定的模型进行预测
     
     st.subheader(f"Prediction results using the {selected_model} model")
