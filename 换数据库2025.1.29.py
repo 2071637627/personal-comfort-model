@@ -31,12 +31,6 @@ with st.sidebar:
         ["冬季 (0)", "夏季 (1)", "过渡季 (2)"],
         index=0
     )
-    climate_zone = st.selectbox(
-        "气候分区",
-        ["严寒地区 (0)", "寒冷地区 (1)", "夏热冬冷 (2)",
-         "夏热冬暖 (3)", "温和地区 (4)"],
-        index=0
-    )
 
     # 第三层级：Subject's Personal Information
     st.subheader("3. 人员信息")
@@ -63,26 +57,11 @@ with st.sidebar:
     metabolic = st.number_input("代谢率 (met)", 0.5, 4.0, 1.2, 0.1)
 
     # 第五层级：Indoor Physical Parameters
-    st.subheader("5. 室内外环境参数")
+    st.subheader("5. 室内环境参数")
     input_mode = st.radio(
         "输入模式", 
         ["手动输入", "随机生成30组", "随机生成50组", "随机生成100组"]
     )
-
-    # 气候分区温度范围
-    climate_code = int(climate_zone.split("(")[1].replace(")", ""))
-    temp_ranges = {
-        0: (-20, 5),    # 严寒地区
-        1: (-10, 10),   # 寒冷地区
-        2: (0, 25),     # 夏热冬冷
-        3: (10, 35),    # 夏热冬暖
-        4: (5, 30)      # 温和地区
-    }
-    min_temp, max_temp = temp_ranges[climate_code]
-
-    if "手动" in input_mode:
-        # 自动计算合理默认值
-        default_temp = np.clip(15.0, min_temp, max_temp)  # 确保默认值在有效范围内
 
 # ================= 数据处理模块 =================
 def generate_data():
@@ -90,9 +69,6 @@ def generate_data():
     # 解析编码值
     codes = {
         'Season': int(season.split("(")[1].replace(")", "")),
-        'Climate Zone': int(climate_zone.split("(")[1].replace(")", "")),
-        'Building Type': int(building_type.split("(")[1].replace(")", "")),
-        'Operation Mode': int(operation_mode.split("(")[1].replace(")", "")),
         'Sex': int(sex.split("(")[1].replace(")", "")),
         'Age Group': int(age_group.split("(")[1].replace(")", "")),
         'Height (cm)': height,
@@ -106,20 +82,19 @@ def generate_data():
         temp = st.number_input("空气温度 (°C)", 10.0, 40.0, 25.0)
         humidity = st.number_input("相对湿度 (%)", 0.0, 100.0, 50.0)
         velocity = st.number_input("空气流速 (m/s)", 0.0, 5.0, 0.1)
-        env_params = [[temp, humidity, velocity, outdoor_temp]]  # 添加室外温度
+        env_params = [[temp, humidity, velocity]]
     else:
         n_samples = int(input_mode.split("生成")[1].replace("组", ""))
         np.random.seed(42)
         env_params = np.column_stack([
             np.round(np.random.uniform(18, 32, n_samples), 1),
             np.round(np.random.uniform(30, 80, n_samples), 1),
-            np.round(np.random.uniform(0, 1.5, n_samples), 2),
-            np.round(np.random.uniform(min_temp, max_temp, n_samples), 1)  # 添加室外温度
+            np.round(np.random.uniform(0, 1.5, n_samples), 2)
         ])
 
     # 构建数据框
     df = pd.DataFrame(env_params, columns=[
-        'Temperature (°C)', 'Humidity (%)', 'Velocity (m/s)', 'Outdoor Temperature (°C)'
+        'Temperature (°C)', 'Humidity (%)', 'Velocity (m/s)'
     ])
     
     # 添加固定参数
@@ -128,10 +103,9 @@ def generate_data():
 
     # 调整列顺序
     feature_order = [
-        'Season', 'Climate Zone', 'Building Type', 'Operation Mode',
-        'Sex', 'Age Group', 'Height (cm)', 'Weight (kg)',
+        'Season', 'Sex', 'Age Group', 'Height (cm)', 'Weight (kg)',
         'Clothing (clo)', 'Metabolic (met)',
-        'Temperature (°C)', 'Humidity (%)', 'Velocity (m/s)', 'Outdoor Temperature (°C)'
+        'Temperature (°C)', 'Humidity (%)', 'Velocity (m/s)'
     ]
     return df[feature_order]
 
