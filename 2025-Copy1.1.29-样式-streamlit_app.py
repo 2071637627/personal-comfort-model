@@ -1,6 +1,3 @@
-根据你的需求，我将对代码进行重新组织和调整，确保输入变量按照五个层级分类，并且每个层级的变量都符合你的要求。以下是调整后的代码：
-调整后的代码
-Python复制
 import joblib
 import streamlit as st
 import pandas as pd
