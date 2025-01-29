@@ -180,7 +180,12 @@ if st.button("Run Prediction"):
 # 此处添加模型预测代码
 if st.button("预测"):
     model = models[selected_model]
+    
     input_features = df.drop(columns=["Season", "Climate Zone", "Building Type", "Operation Mode", "Sex", "Age Group"])
+    
+    if isinstance(input_features, pd.DataFrame):
+    input_features = input_features.values
+    
     prediction = model.predict(input_features)  # 使用选定的模型进行预测
     
     st.subheader(f"Prediction results using the {selected_model} model")
