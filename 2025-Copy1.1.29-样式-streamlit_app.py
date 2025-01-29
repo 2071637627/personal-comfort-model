@@ -86,7 +86,7 @@ with st.sidebar:
         "输入模式", 
         ["手动输入", "随机生成30组", "随机生成50组", "随机生成100组"]
     )
-    
+
     # 气候分区温度范围
     climate_code = int(climate_zone.split("(")[1].replace(")", ""))
     temp_ranges = {
@@ -97,12 +97,19 @@ with st.sidebar:
         4: (5, 30)      # 温和地区
     }
     min_temp, max_temp = temp_ranges[climate_code]
-    
+
     if "手动" in input_mode:
+        # 自动计算合理默认值
+        default_temp = np.clip(15.0, min_temp, max_temp)  # 确保默认值在有效范围内
+        
         outdoor_temp = st.number_input(
-            "日均室外温度 (°C)", 
-            min_temp, max_temp, 15.0,
-            help=f"当前气候分区建议范围：{min_temp}°C ~ {max_temp}°C"
+            "日均室外温度 (°C)",
+            min_value=float(min_temp),  # 确保转换为float
+            max_value=float(max_temp),
+            value=default_temp,
+            step=0.5,
+            format="%.1f",
+            help=f"当前气候分区有效范围：{min_temp}°C ~ {max_temp}°C"
         )
     else:
         st.info(f"室外温度生成范围：{min_temp}°C ~ {max_temp}°C")
