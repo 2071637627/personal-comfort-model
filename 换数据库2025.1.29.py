@@ -38,24 +38,6 @@ with st.sidebar:
         index=0
     )
 
-    # 第二层级：Building Information
-    st.subheader("2. 建筑信息")
-    building_type = st.selectbox(
-        "建筑类型",
-        ["宿舍 (0)", "教育建筑 (1)", "办公建筑 (2)", "住宅 (3)"],
-        index=0
-    )
-    operation_mode = st.selectbox(
-        "运行模式",
-        ["空调供暖 (0)", "毛细管顶棚供暖 (1)", 
-         "冷辐射顶棚供冷 (2)", "对流供冷 (3)",
-         "对流供暖 (4)", "锅炉供暖 (5)", 
-         "自然通风 (6)", "其他 (7)",
-         "地板辐射供暖 (8)", "散热器供暖 (9)",
-         "自采暖 (10)", "分体空调 (11)"],
-        index=0
-    )
-
     # 第三层级：Subject's Personal Information
     st.subheader("3. 人员信息")
     col1, col2 = st.columns(2)
@@ -101,18 +83,6 @@ with st.sidebar:
     if "手动" in input_mode:
         # 自动计算合理默认值
         default_temp = np.clip(15.0, min_temp, max_temp)  # 确保默认值在有效范围内
-        
-        outdoor_temp = st.number_input(
-            "日均室外温度 (°C)",
-            min_value=float(min_temp),  # 确保转换为float
-            max_value=float(max_temp),
-            value=default_temp,
-            step=0.5,
-            format="%.1f",
-            help=f"当前气候分区有效范围：{min_temp}°C ~ {max_temp}°C"
-        )
-    else:
-        st.info(f"室外温度生成范围：{min_temp}°C ~ {max_temp}°C")
 
 # ================= 数据处理模块 =================
 def generate_data():
