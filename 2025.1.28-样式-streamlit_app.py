@@ -12,24 +12,24 @@ Image.MAX_IMAGE_PIXELS = None
 LightGBM = joblib.load('lgbm_model.pkl')
 GBM = joblib.load('gbm_model.pkl')
 XGBoost = joblib.load('xgb_model.pkl')
-RF = joblib.load('rf_model.pkl')
-ET = joblib.load('et_model.pkl')
-KNN = joblib.load('knn_model.pkl')
-SVM = joblib.load('svm_model.pkl')
-DT = joblib.load('dt_model.pkl')
-ANN = joblib.load('ann_model.pkl')
+#RF = joblib.load('rf_model.pkl')
+#ET = joblib.load('et_model.pkl')
+#KNN = joblib.load('knn_model.pkl')
+#SVM = joblib.load('svm_model.pkl')
+#DT = joblib.load('dt_model.pkl')
+#ANN = joblib.load('ann_model.pkl')
 
 # Model dictionary
 models = {
     'LightGBM': LightGBM,
     'GBM': GBM,
     'XGBoost': XGBoost,
-    'RF': RF,
-    'ET': ET,
-    'KNN': KNN,
-    'SVM': SVM,
-    'DT': DT,
-    'ANN': ANN
+    #'RF': RF,
+    #'ET': ET,
+    #'KNN': KNN,
+    #'SVM': SVM,
+    #'DT': DT,
+    #'ANN': ANN
 }
 
 # 标题
