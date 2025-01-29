@@ -7,3 +7,10 @@ scikit-learn==1.5.1
 catboost==1.2.5
 matplotlib==3.9.2
 lightgbm==4.5.0
+gbm==0.0.1
+ann==0.1.0
+dt==1.1.72
+et==0.0.2
+knn==1.0.0
+rf==1.1.0
+svm==0.1.0
