@@ -23,7 +23,7 @@ XGBoost = joblib.load('xgb_model.pkl')
 models = {
     'LightGBM': LightGBM,
     'GBM': GBM,
-    'XGBoost': XGBoost,
+    'XGBoost': XGBoost
     #'RF': RF,
     #'ET': ET,
     #'KNN': KNN,
