@@ -33,7 +33,7 @@ with st.sidebar:
         ["Winter Season (0)", "Summer Season (1)", "Transition Season (2)"],
         index=0
     )
-    Climate Zone = st.selectbox(
+    Climate_Zone = st.selectbox(
         "Climate Zone",
         ["Severe cold zone (0)", "Cold zone (1)", "Hot summer and cold winter zone (2)",
          "Hot summer and warm winter zone  (3)", "Mild zone (4)"],
@@ -42,12 +42,12 @@ with st.sidebar:
 
     # 第二层级：Building Information
     st.subheader("2. Building Information")
-    Building Type = st.selectbox(
+    Building_Type = st.selectbox(
         "Building Type",
         ["Dormitory (0)", "Educational (1)", "Office (2)", "Residential (3)"],
         index=0
     )
-    Building Operation Mode = st.selectbox(
+    Building_Operation_Mode = st.selectbox(
         "Building Operation Mode",
         ["Air conditioning heating (0)", "Ceiling capillary heating (1)", 
          "Cold radiation ceiling cooling (2)", "Convection cooling (3)",
@@ -79,8 +79,8 @@ with st.sidebar:
 
     # 第四层级：Subjective Thermal Comfort Information
     st.subheader("4. Subjective Thermal Comfort Information")
-    Clothing Insulation = st.number_input("Clothing Insulation", 0.0, 2.0, 1.0, 0.1)
-    Metabolic Rate = st.number_input("Metabolic Rate", 0.5, 4.0, 1.2, 0.1)
+    Clothing_Insulation = st.number_input("Clothing Insulation", 0.0, 2.0, 1.0, 0.1)
+    Metabolic_Rate = st.number_input("Metabolic Rate", 0.5, 4.0, 1.2, 0.1)
 
     # 第五层级：Indoor Physical Parameters
     st.subheader("5. Indoor Physical Parameters")
@@ -90,7 +90,7 @@ with st.sidebar:
     )
 
     # 气候分区温度范围
-    climate_code = int(Climate Zone.split("(")[1].replace(")", ""))
+    climate_code = int(Climate_Zone.split("(")[1].replace(")", ""))
     temp_ranges = {
         0: (-20, 5),    # 严寒地区
         1: (-10, 10),   # 寒冷地区
