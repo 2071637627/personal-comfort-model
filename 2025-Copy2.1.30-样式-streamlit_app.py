@@ -189,16 +189,16 @@ scaler = joblib.load('minmax_scaler.pkl')  # 确保与训练时使用相同的sc
 class_weights = joblib.load('class_weights.pkl')  # 从训练代码中保存的权重
 
 # ================= 修改后的预测模块 =================
+# ================= 预测分析模块 =================
 if st.button("开始预测"):
     try:
         model = models[selected_model]
         
         # 执行预测
         with st.spinner("预测进行中，请稍候..."):
-            # NEW: 显式进行数据标准化
             scaled_df = scaler.transform(df)  # 使用训练时的scaler
             
-            # NEW: 获取概率预测并调整阈值
+            # 获取概率预测并调整阈值
             if selected_model == 'XGBoost':
                 y_proba = model.predict_proba(scaled_df)
                 # 对"1"类（希望更暖）降低阈值
@@ -214,25 +214,54 @@ if st.button("开始预测"):
         results_df = df.copy()
         results_df["预测结果"] = predictions
         
-        # NEW: 添加概率分析列
+        # 添加概率分析列
         if raw_proba is not None:
             results_df["无需改变概率"] = raw_proba[:, 0]
             results_df["希望更暖概率"] = raw_proba[:, 1]
             results_df["希望更凉概率"] = raw_proba[:, 2]
 
-        # ...（原有显示代码保持不变）...
+        # 显示预测结果
+        with st.expander("📊 查看详细预测结果", expanded=True):
+            def highlight_tp(val):
+                colors = {0: '#e6f3ff', 1: '#ffe6e6', 2: '#e6ffe6'}
+                return f'background-color: {colors.get(val, "")}'
+            
+            styled_df = results_df.style.applymap(highlight_tp, subset=["预测结果"])
+            st.dataframe(styled_df, height=300)
 
         # 可视化分析
         st.subheader("📈 分析图表")
-        col1, col2, col3 = st.columns(3)  # NEW: 增加概率分析列
+        col1, col2, col3 = st.columns(3)
 
         with col1:
-            # 预测结果分布（原有代码保持不变）
+            # 预测结果分布
+            fig1 = plt.figure(figsize=(8, 6))
+            results_df["舒适度评价"].value_counts().plot.pie(
+                autopct="%1.1f%%",
+                colors=["#66b3ff", "#ff9999", "#99ff99"],
+                startangle=90
+            )
+            plt.title("预测结果分布")
+            plt.ylabel("")
+            st.pyplot(fig1)
 
         with col2:
-            # 温度-舒适度关系（原有代码保持不变）
+            # 温度-舒适度关系
+            fig2 = plt.figure(figsize=(8, 6))
+            plt.scatter(
+                results_df["Temperature (°C)"],
+                results_df["预测结果"],
+                c=results_df["预测结果"],
+                cmap="coolwarm",
+                alpha=0.7
+            )
+            plt.colorbar(ticks=[0, 1, 2]).set_ticklabels(["无需改变", "希望更暖", "希望更凉"])
+            plt.xlabel("温度 (°C)")
+            plt.ylabel("热舒适偏好")
+            plt.grid(linestyle="--", alpha=0.3)
+            st.pyplot(fig2)
 
-        # NEW: 添加概率分布分析
+        # 新增概率分布分析
         with col3:
             if raw_proba is not None:
                 fig3 = plt.figure(figsize=(8, 6))
@@ -245,14 +274,14 @@ if st.button("开始预测"):
                 plt.grid(linestyle="--", alpha=0.3)
                 st.pyplot(fig3)
 
-        # NEW: 添加阈值调节滑块（仅针对XGBoost）
+        # 添加阈值调节滑块（仅针对XGBoost）
         if selected_model == 'XGBoost':
             st.subheader("⚖️ 阈值调整（实验功能）")
             col4, col5, col6 = st.columns(3)
             with col4:
                 thresh_0 = st.slider("无需改变阈值", 0.0, 1.0, 0.3, 0.05)
             with col5:
-                thresh_1 = st.slider("希望更暖阈值", 0.0, 1.0, 0.2, 0.05)  # 降低阈值
+                thresh_1 = st.slider("希望更暖阈值", 0.0, 1.0, 0.2, 0.05)
             with col6:
                 thresh_2 = st.slider("希望更凉阈值", 0.0, 1.0, 0.3, 0.05)
             
