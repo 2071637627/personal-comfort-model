@@ -116,56 +116,62 @@ with st.sidebar:
     else:
         st.info(f"室外温度生成范围：{min_temp}°C ~ {max_temp}°C")
 
-# ================= 数据处理模块 =================
+# ================= 修改后的数据处理模块 =================
 def generate_data():
-    """生成输入数据框"""
-    # 解析编码值
+    """生成与训练特征严格一致的数据框"""
+    # 解析编码值（严格匹配训练特征名称）
     codes = {
+        # 确保键名与训练特征完全一致（参考训练数据列名）
         'Season': int(Season.split("(")[1].replace(")", "")),
-        'Climate Zone': int(Climate_Zone.split("(")[1].replace(")", "")),
-        'Building Type': int(Building_Type.split("(")[1].replace(")", "")),
-        'Building Operation Mode': int(Building_Operation_Mode.split("(")[1].replace(")", "")),
+        'Climate_Zone': int(Climate_Zone.split("(")[1].replace(")", "")),  # 下划线命名
+        'Building_Type': int(Building_Type.split("(")[1].replace(")", "")),
+        'Building_Operation_Mode': int(Building_Operation_Mode.split("(")[1].replace(")", "")),
         'Sex': int(Sex.split("(")[1].replace(")", "")),
         'Age': int(Age.split("(")[1].replace(")", "")),
         'Height': Height,
         'Weight': Weight,
-        'Clothing Insulation': Clothing_Insulation,
-        'Metabolic Rate': Metabolic_Rate
+        'Clothing_Insulation': Clothing_Insulation,  # 匹配训练特征命名
+        'Metabolic_Rate': Metabolic_Rate
     }
 
-    # 生成环境参数
-    if "手动" in input_mode:
-        temp = st.number_input("Indoor Air Temperature", 10.0, 40.0, 25.0)
-        humidity = st.number_input("Indoor Relative Humidity", 0.0, 100.0, 50.0)
-        velocity = st.number_input("Indoor Air Velocity", 0.0, 5.0, 0.1)
-        env_params = [[temp, humidity, velocity, outdoor_temp]]  # 添加室外温度
+    # 生成环境参数（列名与训练数据严格一致）
+    if "Manual input" in input_mode:
+        env_params = {
+            'Indoor_Air_Temperature': st.number_input("Indoor Air Temperature", 10.0, 40.0, 25.0),
+            'Indoor_Relative_Humidity': st.number_input("Indoor Relative Humidity", 0.0, 100.0, 50.0),
+            'Indoor_Air_Velocity': st.number_input("Indoor Air Velocity", 0.0, 5.0, 0.1),
+            'Outdoor_Temperature': outdoor_temp
+        }
     else:
-        n_samples = int(input_mode.split("生成")[1].replace("组", ""))
+        n_samples = int(input_mode.split("(")[1].replace(")", ""))
         np.random.seed(42)
-        env_params = np.column_stack([
-            np.round(np.random.uniform(18, 32, n_samples), 1),
-            np.round(np.random.uniform(30, 80, n_samples), 1),
-            np.round(np.random.uniform(0, 1.5, n_samples), 2),
-            np.round(np.random.uniform(min_temp, max_temp, n_samples), 1)  # 添加室外温度
-        ])
+        env_params = {
+            'Indoor_Air_Temperature': np.round(np.random.uniform(18, 32, n_samples), 1),
+            'Indoor_Relative_Humidity': np.round(np.random.uniform(30, 80, n_samples), 1),
+            'Indoor_Air_Velocity': np.round(np.random.uniform(0, 1.5, n_samples), 2),
+            'Outdoor_Temperature': np.round(np.random.uniform(min_temp, max_temp, n_samples), 1)
+        }
 
-    # 构建数据框
-    df = pd.DataFrame(env_params, columns=[
-        'Indoor Air Temperature', 'Indoor Relative Humidity', 'Indoor Air Velocity', 'Outdoor Temperature'
-    ])
-    
-    # 添加固定参数
-    for col, val in codes.items():
-        df[col] = val
-
-    # 调整列顺序
+    # 构建数据框（确保列顺序与训练时完全一致）
     feature_order = [
-        'Season', 'Climate Zone', 'Building Type', 'Operation Mode',
-        'Sex', 'Age', 'Height', 'Weight',
-        'Clothing Insulation', 'Metabolic Rate',
-        'Indoor Air Temperature', 'Indoor Relative Humidity', 'Indoor Air Velocity', 'Outdoor Temperature'
+        # 按训练数据实际列顺序排列（需根据训练数据调整）
+        'Season',
+        'Climate_Zone',
+        'Building_Type',
+        'Building_Operation_Mode',
+        'Sex',
+        'Age',
+        'Height',
+        'Weight',
+        'Clothing_Insulation',
+        'Metabolic_Rate',
+        'Indoor_Air_Temperature',
+        'Indoor_Relative_Humidity',
+        'Indoor_Air_Velocity',
+        'Outdoor_Temperature'
     ]
-    return df[feature_order]
+    
+    return pd.DataFrame([{**codes, **env_params}])[feature_order]  # 强制排序
 
 # ================= 主界面显示模块 =================
 st.title("🏢 建筑热舒适度智能预测系统")
