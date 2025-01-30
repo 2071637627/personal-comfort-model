@@ -185,10 +185,8 @@ st.header("🔮 预测分析")
 selected_model = st.selectbox("选择预测模型", list(models.keys()))
 
 # NEW: 加载保存的标准化器和类别权重
-scaler = joblib.load('minmax_scaler.pkl')  # 确保与训练时使用相同的scaler
-class_weights = joblib.load('class_weights.pkl')  # 从训练代码中保存的权重
+scaler = joblib.load('scaler.pkl')  # 确保与训练时使用相同的scaler
 
-# ================= 修改后的预测模块 =================
 # ================= 预测分析模块 =================
 if st.button("开始预测"):
     try:
@@ -198,18 +196,10 @@ if st.button("开始预测"):
         with st.spinner("预测进行中，请稍候..."):
             scaled_df = scaler.transform(df)  # 使用训练时的scaler
             
-            # 获取概率预测并调整阈值
-            if selected_model == 'XGBoost':
-                y_proba = model.predict_proba(scaled_df)
-                # 对"1"类（希望更暖）降低阈值
-                adjusted_proba = y_proba * [0.8, 1.5, 1.0]  # 权重调整系数
-                predictions = np.argmax(adjusted_proba, axis=1)
-            else:
-                predictions = model.predict(scaled_df)
-            
-            # 保留原始概率用于分析
+            # 统一预测逻辑
+            predictions = model.predict(scaled_df)
             raw_proba = model.predict_proba(scaled_df) if hasattr(model, "predict_proba") else None
-
+            
         # 构建结果数据框
         results_df = df.copy()
         results_df["预测结果"] = predictions
