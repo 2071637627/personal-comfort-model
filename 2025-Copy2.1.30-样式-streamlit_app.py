@@ -173,6 +173,21 @@ def generate_data():
     
     return pd.DataFrame([{**codes, **env_params}])[feature_order]  # 强制排序
 
+# 输入数据展示
+with st.expander("📥 查看输入数据", expanded=True):
+    # 检查 DataFrame 的数据类型
+    numeric_columns = df.select_dtypes(include=[float, int]).columns.tolist()
+    
+    # 仅对数值列应用格式化
+    styled_df = df.style.format(lambda x: "{:.1f}" if x.name in numeric_columns else x)
+    
+    st.dataframe(styled_df, height=300)
+    st.download_button(
+        label="下载输入数据",
+        data=df.to_csv(index=False).encode('utf-8'),
+        file_name='input_data.csv'
+    )
+
 # ================= 主界面显示模块 =================
 st.title("🏢 建筑热舒适度智能预测系统")
 df = generate_data()
