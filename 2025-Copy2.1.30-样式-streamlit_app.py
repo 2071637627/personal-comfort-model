@@ -122,15 +122,15 @@ def generate_data():
     # 解析编码值
     codes = {
         'Season': int(Season.split("(")[1].replace(")", "")),
-        'Climate Zone': int(Climate Zone.split("(")[1].replace(")", "")),
-        'Building Type': int(Building Type.split("(")[1].replace(")", "")),
-        'Building Operation Mode': int(Building Operation Mode.split("(")[1].replace(")", "")),
+        'Climate Zone': int(Climate_Zone.split("(")[1].replace(")", "")),
+        'Building Type': int(Building_Type.split("(")[1].replace(")", "")),
+        'Building Operation Mode': int(Building_Operation_Mode.split("(")[1].replace(")", "")),
         'Sex': int(Sex.split("(")[1].replace(")", "")),
         'Age': int(Age.split("(")[1].replace(")", "")),
         'Height': Height,
         'Weight': Weight,
-        'Clothing Insulation': Clothing Insulation,
-        'Metabolic Rate': Metabolic Rate
+        'Clothing Insulation': Clothing_Insulation,
+        'Metabolic Rate': Metabolic_Rate
     }
 
     # 生成环境参数
