@@ -52,7 +52,7 @@ with st.sidebar:
         ["Air conditioning heating (0)", "Ceiling capillary heating (1)", 
          "Cold radiation ceiling cooling (2)", "Convection cooling (3)",
          "Convection heating (4)", "Furnace heating (5)", 
-         "Naturally Ventilated (6)", "其他 (7)",
+         "Naturally Ventilated (6)", "Others (7)",
          "Radiant floor heating (8)", "Radiator heating (9)",
          "self-heating (10)", "Split air conditioner (11)"],
         index=0
@@ -151,7 +151,7 @@ def generate_data():
 
     # 构建数据框
     df = pd.DataFrame(env_params, columns=[
-        'Temperature (°C)', 'Humidity (%)', 'Velocity (m/s)', 'Outdoor Temperature (°C)'
+        'Indoor Air Temperature', 'Indoor Relative Humidity', 'Indoor Air Velocity', 'Outdoor Temperature'
     ])
     
     # 添加固定参数
@@ -161,9 +161,9 @@ def generate_data():
     # 调整列顺序
     feature_order = [
         'Season', 'Climate Zone', 'Building Type', 'Operation Mode',
-        'Sex', 'Age Group', 'Height (cm)', 'Weight (kg)',
-        'Clothing (clo)', 'Metabolic (met)',
-        'Temperature (°C)', 'Humidity (%)', 'Velocity (m/s)', 'Outdoor Temperature (°C)'
+        'Sex', 'Age', 'Height', 'Weight',
+        'Clothing Insulation', 'Metabolic Rate',
+        'Indoor Air Temperature', 'Indoor Relative Humidity', 'Indoor Air Velocity', 'Outdoor Temperature'
     ]
     return df[feature_order]
 
