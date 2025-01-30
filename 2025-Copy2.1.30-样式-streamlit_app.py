@@ -65,7 +65,7 @@ with st.sidebar:
         Sex = st.radio("Sex", ["Female (0)", "Male (1)"], index=0)
     with col2:
         Age = st.selectbox(
-            "Age,
+            "Age",
             ["<18 (0)", "18-30 (1)", "31-40 (2)", 
              "41-50 (3)", "51-60 (4)", ">61 (5)"],
             index=1
