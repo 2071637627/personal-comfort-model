@@ -184,6 +184,9 @@ with st.expander("📥 查看输入数据", expanded=True):
 st.header("🔮 预测分析")
 selected_model = st.selectbox("选择预测模型", list(models.keys()))
 
+# NEW: 加载保存的标准化器和类别权重
+scaler = joblib.load('scaler.pkl')  # 确保与训练时使用相同的scaler
+
 if st.button("开始预测"):
     try:
         model = models[selected_model]
