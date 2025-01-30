@@ -27,45 +27,45 @@ with st.sidebar:
     st.header("⚙️ 参数输入面板")
 
     # 第一层级：Basic Identifiers
-    st.subheader("1. 基础标识")
-    season = st.selectbox(
-        "季节",
-        ["冬季 (0)", "夏季 (1)", "过渡季 (2)"],
+    st.subheader("1. Basic Identifiers")
+    Season = st.selectbox(
+        "Season",
+        ["Winter Season (0)", "Summer Season (1)", "Transition Season (2)"],
         index=0
     )
-    climate_zone = st.selectbox(
-        "气候分区",
-        ["严寒地区 (0)", "寒冷地区 (1)", "夏热冬冷 (2)",
-         "夏热冬暖 (3)", "温和地区 (4)"],
+    Climate Zone = st.selectbox(
+        "Climate Zone",
+        ["Severe cold zone (0)", "Cold zone (1)", "Hot summer and cold winter zone (2)",
+         "Hot summer and warm winter zone  (3)", "Mild zone (4)"],
         index=0
     )
 
     # 第二层级：Building Information
-    st.subheader("2. 建筑信息")
-    building_type = st.selectbox(
-        "建筑类型",
-        ["宿舍 (0)", "教育建筑 (1)", "办公建筑 (2)", "住宅 (3)"],
+    st.subheader("2. Building Information")
+    Building Type = st.selectbox(
+        "Building Type",
+        ["Dormitory (0)", "Educational (1)", "Office (2)", "Residential (3)"],
         index=0
     )
-    operation_mode = st.selectbox(
-        "运行模式",
-        ["空调供暖 (0)", "毛细管顶棚供暖 (1)", 
-         "冷辐射顶棚供冷 (2)", "对流供冷 (3)",
-         "对流供暖 (4)", "锅炉供暖 (5)", 
-         "自然通风 (6)", "其他 (7)",
-         "地板辐射供暖 (8)", "散热器供暖 (9)",
-         "自采暖 (10)", "分体空调 (11)"],
+    Building Operation Mode = st.selectbox(
+        "Building Operation Mode",
+        ["Air conditioning heating (0)", "Ceiling capillary heating (1)", 
+         "Cold radiation ceiling cooling (2)", "Convection cooling (3)",
+         "Convection heating (4)", "Furnace heating (5)", 
+         "Naturally Ventilated (6)", "其他 (7)",
+         "Radiant floor heating (8)", "Radiator heating (9)",
+         "self-heating (10)", "Split air conditioner (11)"],
         index=0
     )
 
     # 第三层级：Subject's Personal Information
-    st.subheader("3. 人员信息")
+    st.subheader("3. Subject's Personal Information")
     col1, col2 = st.columns(2)
     with col1:
-        sex = st.radio("性别", ["女 (0)", "男 (1)"], index=0)
+        Sex = st.radio("Sex", ["Female (0)", "Male (1)"], index=0)
     with col2:
-        age_group = st.selectbox(
-            "年龄段",
+        Age = st.selectbox(
+            "Age,
             ["<18 (0)", "18-30 (1)", "31-40 (2)", 
              "41-50 (3)", "51-60 (4)", ">61 (5)"],
             index=1
@@ -73,24 +73,24 @@ with st.sidebar:
     
     col3, col4 = st.columns(2)
     with col3:
-        height = st.number_input("身高 (cm)", 100, 250, 170)
+        Height = st.number_input("Height", 100, 250, 170)
     with col4:
-        weight = st.number_input("体重 (kg)", 30, 150, 65)
+        Weight = st.number_input("Weight", 30, 150, 65)
 
     # 第四层级：Subjective Thermal Comfort Information
-    st.subheader("4. 热舒适参数")
-    clothing = st.number_input("服装热阻 (clo)", 0.0, 2.0, 1.0, 0.1)
-    metabolic = st.number_input("代谢率 (met)", 0.5, 4.0, 1.2, 0.1)
+    st.subheader("4. Subjective Thermal Comfort Information")
+    Clothing Insulation = st.number_input("Clothing Insulation", 0.0, 2.0, 1.0, 0.1)
+    Metabolic Rate = st.number_input("Metabolic Rate", 0.5, 4.0, 1.2, 0.1)
 
     # 第五层级：Indoor Physical Parameters
-    st.subheader("5. 室内外环境参数")
+    st.subheader("5. Indoor Physical Parameters")
     input_mode = st.radio(
-        "输入模式", 
-        ["手动输入", "随机生成30组", "随机生成50组", "随机生成100组"]
+        "Input pattern", 
+        ["Manual input", "Randomly generate (30)", "Randomly generate (50)", "Randomly generate (100)"]
     )
 
     # 气候分区温度范围
-    climate_code = int(climate_zone.split("(")[1].replace(")", ""))
+    climate_code = int(Climate Zone.split("(")[1].replace(")", ""))
     temp_ranges = {
         0: (-20, 5),    # 严寒地区
         1: (-10, 10),   # 寒冷地区
@@ -100,12 +100,12 @@ with st.sidebar:
     }
     min_temp, max_temp = temp_ranges[climate_code]
 
-    if "手动" in input_mode:
+    if "Manual input" in input_mode:
         # 自动计算合理默认值
         default_temp = np.clip(15.0, min_temp, max_temp)  # 确保默认值在有效范围内
         
         outdoor_temp = st.number_input(
-            "日均室外温度 (°C)",
+            "Mean Daily Outdoor Temperature",
             min_value=float(min_temp),  # 确保转换为float
             max_value=float(max_temp),
             value=default_temp,
@@ -121,23 +121,23 @@ def generate_data():
     """生成输入数据框"""
     # 解析编码值
     codes = {
-        'Season': int(season.split("(")[1].replace(")", "")),
-        'Climate Zone': int(climate_zone.split("(")[1].replace(")", "")),
-        'Building Type': int(building_type.split("(")[1].replace(")", "")),
-        'Operation Mode': int(operation_mode.split("(")[1].replace(")", "")),
-        'Sex': int(sex.split("(")[1].replace(")", "")),
-        'Age Group': int(age_group.split("(")[1].replace(")", "")),
-        'Height (cm)': height,
-        'Weight (kg)': weight,
-        'Clothing (clo)': clothing,
-        'Metabolic (met)': metabolic
+        'Season': int(Season.split("(")[1].replace(")", "")),
+        'Climate Zone': int(Climate Zone.split("(")[1].replace(")", "")),
+        'Building Type': int(Building Type.split("(")[1].replace(")", "")),
+        'Building Operation Mode': int(Building Operation Mode.split("(")[1].replace(")", "")),
+        'Sex': int(Sex.split("(")[1].replace(")", "")),
+        'Age': int(Age.split("(")[1].replace(")", "")),
+        'Height': Height,
+        'Weight': Weight,
+        'Clothing Insulation': Clothing Insulation,
+        'Metabolic Rate': Metabolic Rate
     }
 
     # 生成环境参数
     if "手动" in input_mode:
-        temp = st.number_input("空气温度 (°C)", 10.0, 40.0, 25.0)
-        humidity = st.number_input("相对湿度 (%)", 0.0, 100.0, 50.0)
-        velocity = st.number_input("空气流速 (m/s)", 0.0, 5.0, 0.1)
+        temp = st.number_input("Indoor Air Temperature", 10.0, 40.0, 25.0)
+        humidity = st.number_input("Indoor Relative Humidity", 0.0, 100.0, 50.0)
+        velocity = st.number_input("Indoor Air Velocity", 0.0, 5.0, 0.1)
         env_params = [[temp, humidity, velocity, outdoor_temp]]  # 添加室外温度
     else:
         n_samples = int(input_mode.split("生成")[1].replace("组", ""))
