@@ -144,6 +144,8 @@ def generate_data():
             'Indoor_Air_Velocity': st.number_input("Indoor Air Velocity", 0.0, 5.0, 0.1),
             'Outdoor_Temperature': outdoor_temp
         }
+        data = {**codes, **env_params}
+        df = pd.DataFrame([data])
     else:
         n_samples = int(input_mode.split("(")[1].replace(")", ""))
         np.random.seed(42)
@@ -153,6 +155,9 @@ def generate_data():
             'Indoor_Air_Velocity': np.round(np.random.uniform(0, 1.5, n_samples), 2),
             'Outdoor_Temperature': np.round(np.random.uniform(min_temp, max_temp, n_samples), 1)
         }
+        codes_expanded = {k: [v]*n_samples for k, v in codes.items()}
+        data = {**codes_expanded, **env_params}
+        df = pd.DataFrame(data)
 
     # 构建数据框（确保列顺序与训练时完全一致）
     feature_order = [
@@ -172,30 +177,15 @@ def generate_data():
         'Outdoor_Temperature'
     ]
     
-    return pd.DataFrame([{**codes, **env_params}])[feature_order]  # 强制排序
+    return df[feature_order]
 
 # ================= 主界面显示模块 =================
 st.title("🏢 建筑热舒适度智能预测系统")
 df = generate_data()
 
-# 检查 df 是否为空
-if df.empty:
-    st.warning("生成的数据为空，请检查输入参数。")
-else:
-    # 输入数据展示
-    with st.expander("📥 查看输入数据", expanded=True):
-        # 定义格式化函数
-        def format_func(x):
-            return "{:.1f}".format(x) if isinstance(x, (int, float)) else x
-
-        # 应用格式化
-        styled_df = df.style.applymap(format_func)
-        st.dataframe(styled_df, height=300)
-        st.download_button(
-            label="下载输入数据",
-            data=df.to_csv(index=False).encode('utf-8'),
-            file_name='input_data.csv'
-        )
+# 数据展示
+with st.expander("📥 查看输入数据"):
+    st.dataframe(df.style.format("{:.1f}"), height=300)
 
 # ================= 预测分析模块 =================
 st.header("🔮 预测分析")
@@ -205,10 +195,7 @@ selected_model = st.selectbox("选择预测模型", list(models.keys()))
 if st.button("开始预测"):
     try:
         model = models[selected_model]
-        
-        # 执行预测
-        with st.spinner("预测进行中，请稍候..."):
-            scaled_df = scaler.transform(df)  # 使用训练时的scaler
+        scaled_df = scaler.transform(df)
             
             # 统一预测逻辑
             predictions = model.predict(scaled_df)
