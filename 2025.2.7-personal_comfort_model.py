@@ -124,16 +124,15 @@ def generate_data():
     """生成与训练特征严格一致的数据框"""
     # 解析编码值（严格匹配训练特征名称）
     codes = {
-        # 确保键名与训练特征完全一致（参考训练数据列名）
         'Season': int(Season.split("(")[1].replace(")", "")),
-        'Climate_Zone': int(Climate_Zone.split("(")[1].replace(")", "")),  # 下划线命名
+        'Climate_Zone': int(Climate_Zone.split("(")[1].replace(")", "")),
         'Building_Type': int(Building_Type.split("(")[1].replace(")", "")),
         'Building_Operation_Mode': int(Building_Operation_Mode.split("(")[1].replace(")", "")),
         'Sex': int(Sex.split("(")[1].replace(")", "")),
         'Age': int(Age.split("(")[1].replace(")", "")),
         'Height': Height,
         'Weight': Weight,
-        'Clothing_Insulation': Clothing_Insulation,  # 匹配训练特征命名
+        'Clothing_Insulation': Clothing_Insulation,
         'Metabolic_Rate': Metabolic_Rate
     }
 
@@ -157,7 +156,6 @@ def generate_data():
 
     # 构建数据框（确保列顺序与训练时完全一致）
     feature_order = [
-        # 按训练数据实际列顺序排列（需根据训练数据调整）
         'Season',
         'Climate_Zone',
         'Building_Type',
@@ -186,8 +184,12 @@ if df.empty:
 else:
     # 输入数据展示
     with st.expander("📥 查看输入数据", expanded=True):
-        numeric_columns = df.select_dtypes(include=[float, int]).columns.tolist()
-        styled_df = df.style.format(lambda x: "{:.1f}" if x.name in numeric_columns else x)
+        # 定义格式化函数
+        def format_func(x):
+            return "{:.1f}".format(x) if isinstance(x, (int, float)) else x
+
+        # 应用格式化
+        styled_df = df.style.applymap(format_func)
         st.dataframe(styled_df, height=300)
         st.download_button(
             label="下载输入数据",
