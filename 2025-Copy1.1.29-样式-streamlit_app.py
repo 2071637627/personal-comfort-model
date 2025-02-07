@@ -15,6 +15,9 @@ models = {
     'XGBoost': joblib.load('xgb_model.pkl')
 }
 
+# 加载标准化器
+scaler = joblib.load('scaler.pkl')  # 确保与训练时使用的scaler一致
+
 # 页面配置
 st.set_page_config(
     page_title="热舒适度预测系统",
@@ -184,20 +187,21 @@ with st.expander("📥 查看输入数据", expanded=True):
 st.header("🔮 预测分析")
 selected_model = st.selectbox("选择预测模型", list(models.keys()))
 
-# NEW: 加载保存的标准化器和类别权重
-scaler = joblib.load('scaler.pkl')  # 确保与训练时使用相同的scaler
-
 if st.button("开始预测"):
     try:
         model = models[selected_model]
         
+        # 对输入数据进行归一化处理
+        scaled_df = scaler.transform(df)  # 使用标准化器对数据进行归一化
+        scaled_df = pd.DataFrame(scaled_df, columns=df.columns)  # 将归一化后的数据转换回DataFrame
+
         # 执行预测
         with st.spinner("预测进行中，请稍候..."):
-            predictions = model.predict(df)
-            proba = model.predict_proba(df) if hasattr(model, "predict_proba") else None
+            predictions = model.predict(scaled_df)  # 使用归一化后的数据进行预测
+            proba = model.predict_proba(scaled_df) if hasattr(model, "predict_proba") else None
 
         # 构建结果数据框
-        results_df = df.copy()
+        results_df = df.copy()  # 使用原始数据框作为基础
         results_df["预测结果"] = predictions
         # 定义舒适度评价的映射关系
         comfort_mapping = {
