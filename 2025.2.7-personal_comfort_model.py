@@ -197,9 +197,9 @@ if st.button("开始预测"):
         model = models[selected_model]
         scaled_df = scaler.transform(df)
             
-            # 统一预测逻辑
-            predictions = model.predict(scaled_df)
-            raw_proba = model.predict_proba(scaled_df) if hasattr(model, "predict_proba") else None
+       # 统一预测逻辑
+        predictions = model.predict(scaled_df)
+        raw_proba = model.predict_proba(scaled_df) if hasattr(model, "predict_proba") else None
             
         # 构建结果数据框
         results_df = df.copy()
