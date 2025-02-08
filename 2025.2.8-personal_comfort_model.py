@@ -146,20 +146,11 @@ def generate_data():
     else:
         n_samples = int(input_mode.split("(")[1].replace(")", ""))
         np.random.seed(42)
-        mean_indoor_temp = 25.0  # 根据实际情况设定
-        std_dev_indoor_temp = 3.0  # 根据实际情况设定
-        
-        mean_humidity = 50.0  # 根据实际情况设定
-        std_dev_humidity = 10.0  # 根据实际情况设定
-        
-        mean_velocity = 0.5  # 根据实际情况设定
-        std_dev_velocity = 0.2  # 根据实际情况设定
-        
         env_params = {
-            'Indoor Air Temperature': np.clip(np.random.normal(mean_indoor_temp, std_dev_indoor_temp, n_samples), 18, 32).tolist(),
-            'Indoor Relative Humidity': np.clip(np.random.normal(mean_humidity, std_dev_humidity, n_samples), 30, 80).tolist(),
-            'Indoor Air Velocity': np.clip(np.random.normal(mean_velocity, std_dev_velocity, n_samples), 0, 1.5).tolist(),
-            'Mean Daily Outdoor Temperature': np.round(np.random.normal((min_temp + max_temp) / 2, (max_temp - min_temp) / 6, n_samples), 1).tolist()
+            'Indoor Air Temperature': np.round(np.random.uniform(18, 32, n_samples), 1).tolist(),
+            'Indoor Relative Humidity': np.round(np.random.uniform(30, 80, n_samples), 1).tolist(),
+            'Indoor Air Velocity': np.round(np.random.uniform(0, 1.5, n_samples), 2).tolist(),
+            'Mean Daily Outdoor Temperature': np.round(np.random.uniform(min_temp, max_temp, n_samples), 1).tolist()
         }
 
     # 构建数据框（确保列顺序与训练时完全一致）
