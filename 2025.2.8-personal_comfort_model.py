@@ -248,10 +248,11 @@ if st.button("Start forecasting"):
             results_df["Comfort Evaluation"].value_counts().plot.pie(
                 autopct="%1.1f%%",
                 colors=["#99ff99", "#ff9999", "#66b3ff"],
-                startangle=90
+                startangle=90,
+                textprops={"fontsize": 12}  # 设置饼图中的百分比字体大小
             )
-            plt.title("Distribution of forecast results")
-            plt.ylabel("")
+            plt.title("Distribution of forecast results", fontsize=14)
+            plt.ylabel("", fontsize=12)  # 设置y轴标签字体大小
             st.pyplot(fig1)
 
         with col2:
@@ -266,9 +267,9 @@ if st.button("Start forecasting"):
                 alpha=0.7
             )
             #plt.colorbar(ticks=[0, 1, 2]).set_ticklabels(["No change", "Warmer", "Cooler"])
-            plt.title("Mapping of indoor air temperatures to predicted thermal preferences")
-            plt.xlabel("Indoor Air Temperature")
-            plt.ylabel("Thermal preference")
+            plt.title("Mapping of indoor air temperatures to predicted thermal preferences", fontsize=14)
+            plt.xlabel("Indoor Air Temperature", fontsize=12)
+            plt.ylabel("Thermal preference", fontsize=12)
             plt.grid(linestyle="--", alpha=0.3)
             st.pyplot(fig2)
 
