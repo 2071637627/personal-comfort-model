@@ -307,7 +307,7 @@ if st.button("Start forecasting"):
                 sigma_c = level_data["Indoor Air Temperature"].std()
                 temperatures = np.linspace(18, 35, 1000)
                 probabilities = (1 / (sigma_c * np.sqrt(2 * np.pi))) * np.exp(-((temperatures - mu_c) ** 2) / (2 * sigma_c ** 2))
-                plt.plot(temperatures, probabilities, label=f'Comfort Level {level} ({comfort_mapping[level]})', color=colors[i])
+                plt.plot(temperatures, probabilities, label=f'Comfort Level {level} ({comfort_mapping[level]}) - Mean: {mu_c:.2f}, Variance: {sigma_c**2:.2f}', color=colors[i])
             
             plt.title('Probability of Thermal Comfort')
             plt.xlabel('Indoor Temperature (°C)')
