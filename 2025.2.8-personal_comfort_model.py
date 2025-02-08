@@ -232,7 +232,7 @@ if st.button("Start forecasting"):
         with st.expander("📊 View detailed forecast results", expanded=True):
             # 条件格式
             def highlight_tp(val):
-                colors = {0: '#e6f3ff', 1: '#ffe6e6', 2: '#e6ffe6'}
+                colors = {0: '#e6ffe6', 1: '#ffe6e6', 2: '#e6f3ff'}
                 return f'background-color: {colors.get(val, "")}'
             
             styled_df = results_df.style.applymap(highlight_tp, subset=["Projected results"])
@@ -247,7 +247,7 @@ if st.button("Start forecasting"):
             fig1 = plt.figure(figsize=(8, 6))
             results_df["Comfort Evaluation"].value_counts().plot.pie(
                 autopct="%1.1f%%",
-                colors=["#66b3ff", "#ff9999", "#99ff99"],
+                colors=["#99ff99", "#ff9999", "#66b3ff"],
                 startangle=90
             )
             plt.title("Distribution of forecast results")
