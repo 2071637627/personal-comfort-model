@@ -260,7 +260,7 @@ if st.button("Start forecasting"):
             plt.scatter(
                 results_df["Indoor Air Temperature"],
                 results_df["Projected results"],
-                c=results_df["Projected results"],
+                #c=results_df["Projected results"],
                 #cmap="coolwarm",
                 c='black',
                 alpha=0.7
