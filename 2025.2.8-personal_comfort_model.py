@@ -303,15 +303,16 @@ if st.button("Start forecasting"):
             plt.figure(figsize=(12, 6))
             for i, level in enumerate(comfort_levels):
                 level_data = results_df[results_df["Projected results"] == level]
-                mu_c = level_data["Indoor Air Temperature"].mean()
-                sigma_c = level_data["Indoor Air Temperature"].std()
-                temperatures = np.linspace(18, 35, 1000)
-                probabilities = (1 / (sigma_c * np.sqrt(2 * np.pi))) * np.exp(-((temperatures - mu_c) ** 2) / (2 * sigma_c ** 2))
-                plt.plot(temperatures, probabilities, label=f'Comfort Level {level} ({comfort_mapping[level]}) - Mean: {mu_c:.2f}, Variance: {sigma_c**2:.2f}', color=colors[i])
+                mu_c = level_data["Indoor Air Temperature"].mean()  # 计算平均值
+                sigma_c = level_data["Indoor Air Temperature"].std()  # 计算标准差
+                temperatures = np.linspace(18, 26, 1000)
+                # 使用累积分布函数（CDF）计算概率
+                cdf_values = norm.cdf(temperatures, mu_c, sigma_c)
+                plt.plot(temperatures, cdf_values, label=f'Comfort Level {level} ({comfort_mapping[level]}) - Mean: {mu_c:.2f}, Variance: {sigma_c**2:.2f}', color=colors[i])
             
-            plt.title('Probability of Thermal Comfort')
+            plt.title('Cumulative Probability of Thermal Comfort')
             plt.xlabel('Indoor Temperature (°C)')
-            plt.ylabel('Probabilities')
+            plt.ylabel('Cumulative Probabilities')
             plt.grid(True)
             plt.legend()
             st.pyplot()
