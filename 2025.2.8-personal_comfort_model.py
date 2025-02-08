@@ -179,7 +179,7 @@ def generate_data():
     for col in df.columns:
         df[col] = pd.to_numeric(df[col], errors='coerce')
         
-      return df[feature_order]
+    return df[feature_order]
 
 # ================= 主界面显示模块 =================
 st.title("🏢 建筑热舒适度智能预测系统")
