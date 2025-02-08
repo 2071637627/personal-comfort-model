@@ -242,14 +242,6 @@ if st.button("Start forecasting"):
         st.subheader("📈 Analyzing Charts")
         col1, col2 = st.columns(2)
         
-        plt.rcParams.update({
-            "font.size": 12,  # 设置全局字体大小
-            "axes.titlesize": 14,  # 设置标题字体大小
-            "axes.labelsize": 12,  # 设置坐标轴标签字体大小
-            "xtick.labelsize": 10,  # 设置x轴刻度标签字体大小
-            "ytick.labelsize": 10,  # 设置y轴刻度标签字体大小
-            "legend.fontsize": 10  # 设置图例字体大小
-        })
         with col1:
             # 预测结果分布
             fig1 = plt.figure(figsize=(8, 6))
