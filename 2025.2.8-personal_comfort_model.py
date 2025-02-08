@@ -178,6 +178,11 @@ def generate_data():
     # 确保所有列都是数值类型
     for col in df.columns:
         df[col] = pd.to_numeric(df[col], errors='coerce')
+
+    # 检查 df 的列名是否与 feature_order 完全一致
+    if set(df.columns) != set(feature_order):
+        missing_columns = set(feature_order) - set(df.columns)
+        raise ValueError(f"数据框中缺少以下列：{missing_columns}")
         
     return df[feature_order]
 
