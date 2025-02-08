@@ -11,8 +11,10 @@ Image.MAX_IMAGE_PIXELS = None
 # 加载模型
 models = {
     'LightGBM': joblib.load('lgbm_model.pkl'),
-    'GBM': joblib.load('gbm_model.pkl'),
-    'XGBoost': joblib.load('xgb_model.pkl')
+    'XGBoost': joblib.load('xgb_model.pkl'),
+    'RF':joblib.load('rf_model.pkl'),
+    'ET': joblib.load('et_model.pkl'),
+    'DT': joblib.load('dt_model.pkl')
 }
 
 # 加载标准化器
@@ -173,7 +175,11 @@ def generate_data():
         'Mean_Daily_Outdoor_Temperature'
     ]
     
-    return pd.DataFrame([{**codes, **env_params}])[feature_order]  # 强制排序
+    # 确保所有列都是数值类型
+    for col in df.columns:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+        
+      return df[feature_order]
 
 # ================= 主界面显示模块 =================
 st.title("🏢 建筑热舒适度智能预测系统")
