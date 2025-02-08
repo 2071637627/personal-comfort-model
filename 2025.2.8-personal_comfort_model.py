@@ -266,6 +266,17 @@ if st.button("Start forecasting"):
                 c='black',
                 alpha=0.7
             )
+            # 获取 Indoor Air Temperature 的最大值和最小值
+            min_temp = results_df["Indoor Air Temperature"].min()
+            max_temp = results_df["Indoor Air Temperature"].max()
+
+            # 绘制两条竖向的点线
+            plt.axvline(x=min_temp, color='red', linestyle=':', label=f'Min Temp ({min_temp:.2f}°C)')
+            plt.axvline(x=max_temp, color='blue', linestyle=':', label=f'Max Temp ({max_temp:.2f}°C)')
+            
+            # 添加图例
+            plt.legend()
+            
             #plt.colorbar(ticks=[0, 1, 2]).set_ticklabels(["No change", "Warmer", "Cooler"])
             plt.title("Mapping of indoor air temperatures to predicted thermal preferences", fontsize=14)
             plt.xlabel("Indoor Air Temperature", fontsize=12)
