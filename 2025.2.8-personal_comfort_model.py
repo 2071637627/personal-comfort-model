@@ -124,33 +124,33 @@ def generate_data():
     # 解析编码值（严格匹配训练特征名称）
     codes = {
         'Season': int(Season.split("(")[1].replace(")", "")),
-        'Climate_Zone': int(Climate_Zone.split("(")[1].replace(")", "")),
-        'Building_Type': int(Building_Type.split("(")[1].replace(")", "")),
-        'Building_Operation_Mode': int(Building_Operation_Mode.split("(")[1].replace(")", "")),
+        'Climate Zone': int(Climate_Zone.split("(")[1].replace(")", "")),
+        'Building Type': int(Building_Type.split("(")[1].replace(")", "")),
+        'Building Operation_Mode': int(Building_Operation_Mode.split("(")[1].replace(")", "")),
         'Sex': int(Sex.split("(")[1].replace(")", "")),
         'Age': int(Age.split("(")[1].replace(")", "")),
         'Height': Height,
         'Weight': Weight,
-        'Clothing_Insulation': Clothing_Insulation,
-        'Metabolic_Rate': Metabolic_Rate
+        'Clothing Insulation': Clothing_Insulation,
+        'Metabolic Rate': Metabolic_Rate
     }
     
     # 生成环境参数
     if "Manual input" in input_mode:
         env_params = {
-            'Indoor_Air_Temperature': [st.number_input("Indoor Air Temperature", 10.0, 40.0, 25.0)],
-            'Indoor_Relative_Humidity': [st.number_input("Indoor Relative Humidity", 0.0, 100.0, 50.0)],
-            'Indoor_Air_Velocity': [st.number_input("Indoor Air Velocity", 0.0, 5.0, 0.1)],
-            'Mean_Daily_Outdoor_Temperature': [Mean_Daily_Outdoor_Temperature]
+            'Indoor Air Temperature': [st.number_input("Indoor Air Temperature", 10.0, 40.0, 25.0)],
+            'Indoor Relative Humidity': [st.number_input("Indoor Relative Humidity", 0.0, 100.0, 50.0)],
+            'Indoor Air Velocity': [st.number_input("Indoor Air Velocity", 0.0, 5.0, 0.1)],
+            'Mean Daily Outdoor Temperature': [Mean_Daily_Outdoor_Temperature]
         }
     else:
         n_samples = int(input_mode.split("(")[1].replace(")", ""))
         np.random.seed(42)
         env_params = {
-            'Indoor_Air_Temperature': np.round(np.random.uniform(18, 32, n_samples), 1).tolist(),
-            'Indoor_Relative_Humidity': np.round(np.random.uniform(30, 80, n_samples), 1).tolist(),
-            'Indoor_Air_Velocity': np.round(np.random.uniform(0, 1.5, n_samples), 2).tolist(),
-            'Mean_Daily_Outdoor_Temperature': np.round(np.random.uniform(min_temp, max_temp, n_samples), 1).tolist()
+            'Indoor Air Temperature': np.round(np.random.uniform(18, 32, n_samples), 1).tolist(),
+            'Indoor Relative Humidity': np.round(np.random.uniform(30, 80, n_samples), 1).tolist(),
+            'Indoor Air Velocity': np.round(np.random.uniform(0, 1.5, n_samples), 2).tolist(),
+            'Mean Daily Outdoor Temperature': np.round(np.random.uniform(min_temp, max_temp, n_samples), 1).tolist()
         }
 
     # 构建数据框（确保列顺序与训练时完全一致）
