@@ -261,7 +261,8 @@ if st.button("Start forecasting"):
                 results_df["Indoor Air Temperature"],
                 results_df["Projected results"],
                 c=results_df["Projected results"],
-                cmap="coolwarm",
+                #cmap="coolwarm",
+                c='black',
                 alpha=0.7
             )
             plt.colorbar(ticks=[0, 1, 2]).set_ticklabels(["No change", "Warmer", "Cooler"])
