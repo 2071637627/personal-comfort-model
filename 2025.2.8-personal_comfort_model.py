@@ -172,6 +172,9 @@ def generate_data():
         'Mean_Daily_Outdoor_Temperature'
     ]
     
+    # 创建数据框
+    df = pd.DataFrame({**codes, **env_params})
+    
     # 确保所有列都是数值类型
     for col in df.columns:
         df[col] = pd.to_numeric(df[col], errors='coerce')
