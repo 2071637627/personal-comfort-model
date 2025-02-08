@@ -12,7 +12,6 @@ Image.MAX_IMAGE_PIXELS = None
 models = {
     'LightGBM': joblib.load('lgbm_model.pkl'),
     'XGBoost': joblib.load('xgb_model.pkl'),
-    'RF':joblib.load('rf_model.pkl'),
     'ET': joblib.load('et_model.pkl'),
     'DT': joblib.load('dt_model.pkl')
 }
