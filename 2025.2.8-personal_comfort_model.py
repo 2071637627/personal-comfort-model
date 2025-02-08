@@ -11,8 +11,7 @@ Image.MAX_IMAGE_PIXELS = None
 # 加载模型
 models = {
     'LightGBM': joblib.load('lgbm_model.pkl'),
-    'XGBoost': joblib.load('xgb_model.pkl'),
-    'DT': joblib.load('dt_model.pkl')
+    'XGBoost': joblib.load('xgb_model.pkl')
 }
 
 # 加载标准化器
