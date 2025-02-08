@@ -154,21 +154,26 @@ def generate_data():
             'Mean_Daily_Outdoor_Temperature': np.round(np.random.uniform(min_temp, max_temp, n_samples), 1).tolist()
         }
 
-    # 构建数据框
-    df = pd.DataFrame(env_params)
-    
-    # 添加固定参数
-    for col, val in codes.items():
-        df[col] = val
-
-    # 调整列顺序
+    # 构建数据框（确保列顺序与训练时完全一致）
     feature_order = [
-        'Season', 'Climate_Zone', 'Building_Type', 'Operation_Mode',
-        'Sex', 'Age', 'Height', 'Weight',
-        'Clothing_Insulation', 'Metabolic_Rate',
-        'Indoor_Air_Temperature', 'Indoor_Relative_Humidity', 'Indoor_Air_Velocity', 'Mean_Daily_Outdoor_Temperature'
+        # 按训练数据实际列顺序排列（需根据训练数据调整）
+        'Season',
+        'Climate_Zone',
+        'Building_Type',
+        'Building_Operation_Mode',
+        'Sex',
+        'Age',
+        'Height',
+        'Weight',
+        'Clothing_Insulation',
+        'Metabolic_Rate',
+        'Indoor_Air_Temperature',
+        'Indoor_Relative_Humidity',
+        'Indoor_Air_Velocity',
+        'Mean_Daily_Outdoor_Temperature'
     ]
-    return df[feature_order]
+    
+    return pd.DataFrame([{**codes, **env_params}])[feature_order]  # 强制排序
 
 # ================= 主界面显示模块 =================
 st.title("🏢 建筑热舒适度智能预测系统")
