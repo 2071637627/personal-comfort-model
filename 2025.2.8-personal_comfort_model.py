@@ -147,7 +147,7 @@ def generate_data():
         n_samples = int(input_mode.split("(")[1].replace(")", ""))
         np.random.seed(42)
         env_params = {
-            'Indoor Air Temperature': np.round(np.random.uniform(18, 32, n_samples), 1).tolist(),
+            'Indoor Air Temperature': np.round(np.random.uniform(18, 35, n_samples), 1).tolist(),
             'Indoor Relative Humidity': np.round(np.random.uniform(30, 80, n_samples), 1).tolist(),
             'Indoor Air Velocity': np.round(np.random.uniform(0, 1.5, n_samples), 2).tolist(),
             'Mean Daily Outdoor Temperature': np.round(np.random.uniform(min_temp, max_temp, n_samples), 1).tolist()
