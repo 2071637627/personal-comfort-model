@@ -265,7 +265,8 @@ if st.button("Start forecasting"):
                 c='black',
                 alpha=0.7
             )
-            plt.colorbar(ticks=[0, 1, 2]).set_ticklabels(["No change", "Warmer", "Cooler"])
+            #plt.colorbar(ticks=[0, 1, 2]).set_ticklabels(["No change", "Warmer", "Cooler"])
+            plt.title("Mapping of indoor air temperatures to predicted thermal preferences")
             plt.xlabel("Indoor Air Temperature")
             plt.ylabel("Thermal preference")
             plt.grid(linestyle="--", alpha=0.3)
