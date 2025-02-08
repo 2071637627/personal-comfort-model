@@ -103,12 +103,12 @@ with st.sidebar:
     }
     min_temp, max_temp = temp_ranges[climate_code]
 
-    if "手动" in input_mode:
+    if "Manual" in input_mode:
         # 自动计算合理默认值
         default_temp = np.clip(15.0, min_temp, max_temp)  # 确保默认值在有效范围内
         
-        outdoor_temp = st.number_input(
-            "日均室外温度 (°C)",
+        Mean_Daily_Outdoor_Temperature = st.number_input(
+            "Mean Daily Outdoor Temperature",
             min_value=float(min_temp),  # 确保转换为float
             max_value=float(max_temp),
             value=default_temp,
@@ -143,7 +143,7 @@ def generate_data():
             'Indoor_Air_Temperature': st.number_input("Indoor Air Temperature", 10.0, 40.0, 25.0),
             'Indoor_Relative_Humidity': st.number_input("Indoor Relative Humidity", 0.0, 100.0, 50.0),
             'Indoor_Air_Velocity': st.number_input("Indoor Air Velocity", 0.0, 5.0, 0.1),
-            'Outdoor_Temperature': outdoor_temp
+            'Mean_Daily_Outdoor_Temperature': outdoor_temp
         }
     else:
         n_samples = int(input_mode.split("(")[1].replace(")", ""))
@@ -152,12 +152,12 @@ def generate_data():
             'Indoor_Air_Temperature': np.round(np.random.uniform(18, 32, n_samples), 1),
             'Indoor_Relative_Humidity': np.round(np.random.uniform(30, 80, n_samples), 1),
             'Indoor_Air_Velocity': np.round(np.random.uniform(0, 1.5, n_samples), 2),
-            'Outdoor_Temperature': np.round(np.random.uniform(min_temp, max_temp, n_samples), 1)
+            'Mean_Daily_Outdoor_Temperature': np.round(np.random.uniform(min_temp, max_temp, n_samples), 1)
         }
 
     # 构建数据框
     df = pd.DataFrame(env_params, columns=[
-        'Indoor_Air_Temperature', 'Indoor_Relative_Humidity', 'Indoor_Air_Velocity', 'Outdoor_Temperature'
+        'Indoor_Air_Temperature', 'Indoor_Relative_Humidity', 'Indoor_Air_Velocity', 'Mean_Daily_Outdoor_Temperature'
     ])
     
     # 添加固定参数
@@ -169,7 +169,7 @@ def generate_data():
         'Season', 'Climate_Zone', 'Building_Type', 'Operation_Mode',
         'Sex', 'Age', 'Height', 'Weight',
         'Clothing_Insulation', 'Metabolic_Rate',
-        'Indoor_Air_Temperature', 'Indoor_Relative_Humidity', 'Indoor_Air_Velocity', 'Outdoor_Temperature'
+        'Indoor_Air_Temperature', 'Indoor_Relative_Humidity', 'Indoor_Air_Velocity', 'Mean_Daily_Outdoor_Temperature'
     ]
     return df[feature_order]
 
