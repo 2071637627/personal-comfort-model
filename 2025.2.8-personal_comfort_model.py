@@ -143,7 +143,7 @@ def generate_data():
             'Indoor_Air_Temperature': st.number_input("Indoor Air Temperature", 10.0, 40.0, 25.0),
             'Indoor_Relative_Humidity': st.number_input("Indoor Relative Humidity", 0.0, 100.0, 50.0),
             'Indoor_Air_Velocity': st.number_input("Indoor Air Velocity", 0.0, 5.0, 0.1),
-            'Mean_Daily_Outdoor_Temperature': outdoor_temp
+            'Mean_Daily_Outdoor_Temperature': Mean_Daily_Outdoor_Temperature
         }
     else:
         n_samples = int(input_mode.split("(")[1].replace(")", ""))
