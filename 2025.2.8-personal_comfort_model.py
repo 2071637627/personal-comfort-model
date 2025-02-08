@@ -126,7 +126,7 @@ def generate_data():
         'Season': int(Season.split("(")[1].replace(")", "")),
         'Climate Zone': int(Climate_Zone.split("(")[1].replace(")", "")),
         'Building Type': int(Building_Type.split("(")[1].replace(")", "")),
-        'Building Operation_Mode': int(Building_Operation_Mode.split("(")[1].replace(")", "")),
+        'Building Operation Mode': int(Building_Operation_Mode.split("(")[1].replace(")", "")),
         'Sex': int(Sex.split("(")[1].replace(")", "")),
         'Age': int(Age.split("(")[1].replace(")", "")),
         'Height': Height,
