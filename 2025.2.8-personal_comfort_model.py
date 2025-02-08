@@ -296,6 +296,21 @@ if st.button("Start forecasting"):
             mime='text/csv'
         )
 
+# 绘制正态分布图
+        with st.expander("📊 Thermal Comfort Probability Distribution"):
+            # 计算平均舒适温度和标准差
+            mu_c = results_df["Indoor Air Temperature"].mean()
+            sigma_c = results_df["Indoor Air Temperature"].std()
+            temperatures = np.linspace(18, 26, 1000)
+            probabilities = (1 / (sigma_c * np.sqrt(2 * np.pi))) * np.exp(-((temperatures - mu_c) ** 2) / (2 * sigma_c ** 2))
+            fig3 = plt.figure(figsize=(8, 4))
+            plt.plot(temperatures, probabilities, label='Probability Density')
+            plt.title('Probability of Thermal Comfort')
+            plt.xlabel('Indoor Temperature (°C)')
+            plt.ylabel('Probability Density')
+            plt.grid(True)
+            plt.legend()
+            st.pyplot(fig3)
 
 # 绘制正态分布图
         with st.expander("📊 Thermal Comfort Probability Distribution"):
@@ -311,11 +326,11 @@ if st.button("Start forecasting"):
                 plt.plot(temperatures, probabilities, label=f'Comfort Level {level} ({comfort_mapping[level]})', color=colors[i])
             
             plt.title('Probability of Thermal Comfort')
-            plt.xlabel('Indoor Air Temperature')
+            plt.xlabel('Indoor Temperature (°C)')
             plt.ylabel('Probability Density')
             plt.grid(True)
             plt.legend()
-            st.pyplot(fig3)
+            st.pyplot()
             
     except Exception as e:
         st.error(f"预测失败：{str(e)}")
