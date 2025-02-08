@@ -266,14 +266,18 @@ if st.button("Start forecasting"):
                 c='black',
                 alpha=0.7
             )
-            # 获取 Indoor Air Temperature 的最大值和最小值
-            min_temp = results_df["Indoor Air Temperature"].min()
-            max_temp = results_df["Indoor Air Temperature"].max()
-
-            # 绘制两条竖向的点线
-            plt.axvline(x=min_temp, color='red', linestyle=':', label=f'Min Temp ({min_temp:.2f}°C)')
-            plt.axvline(x=max_temp, color='blue', linestyle=':', label=f'Max Temp ({max_temp:.2f}°C)')
-            
+            # 筛选出预测值为0的数据
+            zero_projected_results = results_df[results_df["Projected results"] == 0]
+    
+            # 获取预测值为0时的 Indoor Air Temperature 的最大值和最小值
+            if not zero_projected_results.empty:
+                min_temp_at_zero = zero_projected_results["Indoor Air Temperature"].min()
+                max_temp_at_zero = zero_projected_results["Indoor Air Temperature"].max()
+        
+        # 绘制两条竖向的点线
+                plt.axvline(x=min_temp_at_zero, color='red', linestyle=':', label=f'Min Temp at Zero ({min_temp_at_zero:.2f}°C)')
+                plt.axvline(x=max_temp_at_zero, color='blue', linestyle=':', label=f'Max Temp at Zero ({max_temp_at_zero:.2f}°C)')
+    
             # 添加图例
             plt.legend()
             
