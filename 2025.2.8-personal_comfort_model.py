@@ -275,8 +275,8 @@ if st.button("Start forecasting"):
                 max_temp_at_zero = zero_projected_results["Indoor Air Temperature"].max()
         
         # 绘制两条竖向的点线
-                plt.axvline(x=min_temp_at_zero, color='red', linestyle=':', label=f'Min Temp at Zero ({min_temp_at_zero:.2f}°C)')
-                plt.axvline(x=max_temp_at_zero, color='blue', linestyle=':', label=f'Max Temp at Zero ({max_temp_at_zero:.2f}°C)')
+                plt.axvline(x=min_temp_at_zero, color='blue', linestyle=':', label=f'Min Temp at Zero ({min_temp_at_zero:.2f}°C)')
+                plt.axvline(x=max_temp_at_zero, color='red', linestyle=':', label=f'Max Temp at Zero ({max_temp_at_zero:.2f}°C)')
     
             # 添加图例
             plt.legend()
