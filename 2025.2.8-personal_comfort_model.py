@@ -296,7 +296,7 @@ if st.button("Start forecasting"):
             mime='text/csv'
         )
 
-        #绘制正态分布图
+        # 绘制正态分布图
         with st.expander("📊 Thermal Comfort Probability Distribution"):
             comfort_levels = [0, 1, 2]
             colors = ["#99ff99", "#ff9999", "#66b3ff"]
@@ -305,13 +305,13 @@ if st.button("Start forecasting"):
                 level_data = results_df[results_df["Projected results"] == level]
                 mu_c = level_data["Indoor Air Temperature"].mean()
                 sigma_c = level_data["Indoor Air Temperature"].std()
-                temperatures = np.linspace(18, 32, 1000)
+                temperatures = np.linspace(18, 26, 1000)
                 probabilities = (1 / (sigma_c * np.sqrt(2 * np.pi))) * np.exp(-((temperatures - mu_c) ** 2) / (2 * sigma_c ** 2))
                 plt.plot(temperatures, probabilities, label=f'Comfort Level {level} ({comfort_mapping[level]})', color=colors[i])
             
             plt.title('Probability of Thermal Comfort')
             plt.xlabel('Indoor Temperature (°C)')
-            plt.ylabel('Probability Density')
+            plt.ylabel('Probabilities')
             plt.grid(True)
             plt.legend()
             st.pyplot()
