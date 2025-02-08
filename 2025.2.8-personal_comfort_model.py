@@ -157,19 +157,19 @@ def generate_data():
     feature_order = [
         # 按训练数据实际列顺序排列（需根据训练数据调整）
         'Season',
-        'Climate_Zone',
-        'Building_Type',
-        'Building_Operation_Mode',
+        'Climate Zone',
+        'Building Type',
+        'Building Operation Mode',
         'Sex',
         'Age',
         'Height',
         'Weight',
-        'Clothing_Insulation',
-        'Metabolic_Rate',
-        'Indoor_Air_Temperature',
-        'Indoor_Relative_Humidity',
-        'Indoor_Air_Velocity',
-        'Mean_Daily_Outdoor_Temperature'
+        'Clothing Insulation',
+        'Metabolic Rate',
+        'Indoor Air Temperature',
+        'Indoor Relative Humidity',
+        'Indoor Air Velocity',
+        'Mean Daily Outdoor Temperature'
     ]
     
     # 创建数据框
