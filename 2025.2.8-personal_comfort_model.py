@@ -19,14 +19,14 @@ scaler = joblib.load('scaler.pkl')  # 确保与训练时使用的scaler一致
 
 # 页面配置
 st.set_page_config(
-    page_title="热舒适度预测系统",
+    page_title="Thermal comfort prediction system",
     page_icon="🌡️",
     layout="wide"
 )
 
 # ================= 侧边栏输入模块 =================
 with st.sidebar:
-    st.header("⚙️ 参数输入面板")
+    st.header("⚙️ Parameter Input Panel")
 
     # 第一层级：Basic Identifiers
     st.subheader("1. Basic Identifiers")
@@ -113,14 +113,14 @@ with st.sidebar:
             value=default_temp,
             step=0.5,
             format="%.1f",
-            help=f"当前气候分区有效范围：{min_temp}°C ~ {max_temp}°C"
+            help=f"Effective range of current climate zones：{min_temp}°C ~ {max_temp}°C"
         )
     else:
-        st.info(f"室外温度生成范围：{min_temp}°C ~ {max_temp}°C")
+        st.info(f"Outdoor temperature generation range：{min_temp}°C ~ {max_temp}°C")
 
 # ================= 数据处理模块 =================
 def generate_data():
-    """生成与训练特征严格一致的数据框"""
+    """Generate data frames that are strictly consistent with the training features"""
     # 解析编码值（严格匹配训练特征名称）
     codes = {
         'Season': int(Season.split("(")[1].replace(")", "")),
@@ -182,28 +182,28 @@ def generate_data():
     # 检查 df 的列名是否与 feature_order 完全一致
     if set(df.columns) != set(feature_order):
         missing_columns = set(feature_order) - set(df.columns)
-        raise ValueError(f"数据框中缺少以下列：{missing_columns}")
+        raise ValueError(f"Missing in the data box：{missing_columns}")
         
     return df[feature_order]
 
 # ================= 主界面显示模块 =================
-st.title("🏢 建筑热舒适度智能预测系统")
+st.title("🏢 Intelligent Prediction System for Building Thermal Comfort")
 df = generate_data()
 
 # 输入数据展示
-with st.expander("📥 查看输入数据", expanded=True):
+with st.expander("📥 Viewing Input Data", expanded=True):
     st.dataframe(df.style.format("{:.1f}"), height=300)
     st.download_button(
-        label="下载输入数据",
+        label="Download input data",
         data=df.to_csv(index=False).encode('utf-8'),
         file_name='input_data.csv'
     )
 
 # ================= 预测分析模块 =================
-st.header("🔮 预测分析")
-selected_model = st.selectbox("选择预测模型", list(models.keys()))
+st.header("🔮 Predictive analysis")
+selected_model = st.selectbox("Selecting a Predictive Model", list(models.keys()))
 
-if st.button("开始预测"):
+if st.button("Start forecasting"):
     try:
         model = models[selected_model]
         
@@ -212,45 +212,45 @@ if st.button("开始预测"):
         scaled_df = pd.DataFrame(scaled_df, columns=df.columns)  # 将归一化后的数据转换回DataFrame
 
         # 执行预测
-        with st.spinner("预测进行中，请稍候..."):
+        with st.spinner("Predictions are in progress, please wait..."):
             predictions = model.predict(scaled_df)  # 使用归一化后的数据进行预测
             proba = model.predict_proba(scaled_df) if hasattr(model, "predict_proba") else None
 
         # 构建结果数据框
         results_df = df.copy()  # 使用原始数据框作为基础
-        results_df["预测结果"] = predictions
+        results_df["Projected results"] = predictions
         # 定义舒适度评价的映射关系
         comfort_mapping = {
-            0: "无需改变",
-            1: "希望更暖",
-            2: "希望更凉"
+            0: "No change",
+            1: "Warmer",
+            2: "Cooler"
         }
         # 使用 map 函数将预测结果映射为舒适度评价
-        results_df["舒适度评价"] = results_df["预测结果"].map(comfort_mapping)
+        results_df["Comfort Evaluation"] = results_df["Projected results"].map(comfort_mapping)
 
         # 显示预测结果
-        with st.expander("📊 查看详细预测结果", expanded=True):
+        with st.expander("📊 View detailed forecast results", expanded=True):
             # 条件格式
             def highlight_tp(val):
                 colors = {0: '#e6f3ff', 1: '#ffe6e6', 2: '#e6ffe6'}
                 return f'background-color: {colors.get(val, "")}'
             
-            styled_df = results_df.style.applymap(highlight_tp, subset=["预测结果"])
+            styled_df = results_df.style.applymap(highlight_tp, subset=["Projected results"])
             st.dataframe(styled_df, height=300)
 
         # 可视化分析
-        st.subheader("📈 分析图表")
+        st.subheader("📈 Analyzing Charts")
         col1, col2 = st.columns(2)
 
         with col1:
             # 预测结果分布
             fig1 = plt.figure(figsize=(8, 6))
-            results_df["舒适度评价"].value_counts().plot.pie(
+            results_df["Comfort Evaluation"].value_counts().plot.pie(
                 autopct="%1.1f%%",
                 colors=["#66b3ff", "#ff9999", "#99ff99"],
                 startangle=90
             )
-            plt.title("预测结果分布")
+            plt.title("Distribution of forecast results")
             plt.ylabel("")
             st.pyplot(fig1)
 
@@ -259,20 +259,20 @@ if st.button("开始预测"):
             fig2 = plt.figure(figsize=(8, 6))
             plt.scatter(
                 results_df["Temperature (°C)"],
-                results_df["预测结果"],
-                c=results_df["预测结果"],
+                results_df["Projected results"],
+                c=results_df["Projected results"],
                 cmap="coolwarm",
                 alpha=0.7
             )
-            plt.colorbar(ticks=[0, 1, 2]).set_ticklabels(["无需改变", "希望更暖", "希望更凉"])
-            plt.xlabel("温度 (°C)")
-            plt.ylabel("热舒适偏好")
+            plt.colorbar(ticks=[0, 1, 2]).set_ticklabels(["No change", "Warmer", "Cooler"])
+            plt.xlabel("Temperature (°C)")
+            plt.ylabel("Thermal preference")
             plt.grid(linestyle="--", alpha=0.3)
             st.pyplot(fig2)
 
         # 下载结果
         st.download_button(
-            label="下载完整预测结果",
+            label="Download full forecast results",
             data=results_df.to_csv(index=False, encoding='utf-8-sig').encode('utf-8-sig'),
             file_name=f'predictions_{selected_model}.csv',
             mime='text/csv'
