@@ -258,14 +258,14 @@ if st.button("Start forecasting"):
             # 温度-舒适度关系
             fig2 = plt.figure(figsize=(8, 6))
             plt.scatter(
-                results_df["Temperature (°C)"],
+                results_df["Indoor Air Temperature"],
                 results_df["Projected results"],
                 c=results_df["Projected results"],
                 cmap="coolwarm",
                 alpha=0.7
             )
             plt.colorbar(ticks=[0, 1, 2]).set_ticklabels(["No change", "Warmer", "Cooler"])
-            plt.xlabel("Temperature (°C)")
+            plt.xlabel("Indoor Air Temperature")
             plt.ylabel("Thermal preference")
             plt.grid(linestyle="--", alpha=0.3)
             st.pyplot(fig2)
