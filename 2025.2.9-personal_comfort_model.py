@@ -17,6 +17,8 @@ models = {
     'XGBoost': joblib.load('xgb_model.pkl')
 }
 
+scaler = joblib.load('scaler.pkl')  # 加载训练时保存的归一化器
+
 # 页面配置
 st.set_page_config(
     page_title="Thermal comfort prediction system",
@@ -52,8 +54,8 @@ with st.sidebar:
     Building_Operation_Mode = st.selectbox(
         "Building Operation Mode",
         ["Air conditioning heating (0)", "Ceiling capillary heating (1)",
-         "Cold radiation ceiling cooling (2)", "onvection cooling (3)",
-         "onvection heating (4)", "Furnace heating (5)",
+         "Cold radiation ceiling cooling (2)", "Convection cooling (3)",
+         "Convection heating (4)", "Furnace heating (5)",
          "Naturally Ventilated (6)", "Others (7)",
          "Radiant floor heating (8)", "Radiator heating (9)",
          "self-heating (10)", "Split air conditioner (11)"],
@@ -91,6 +93,10 @@ with st.sidebar:
     )
 
     # 气候分区温度范围
+    climate_zone_code = int(Climate_Zone.split('(')[1].split(')')[0])
+    
+    season_code = int(Season.split('(')[1].split(')')[0])
+    
     climate_temp_ranges = {
         0: {"Winter": (-20, 5), "Summer": (15, 25), "Transition": (5, 15)},
         1: {"Winter": (-10, 10), "Summer": (20, 30), "Transition": (10, 20)},
@@ -98,8 +104,11 @@ with st.sidebar:
         3: {"Winter": (5, 15), "Summer": (30, 35), "Transition": (15, 30)},
         4: {"Winter": (5, 15), "Summer": (20, 30), "Transition": (10, 25)}
     }
+    
     season_map = {0: "Winter", 1: "Summer", 2: "Transition"}
-    min_temp, max_temp = climate_temp_ranges[int(Climate_Zone)][season_map[int(Season)]]
+    
+    # 使用提取的编码查找对应的温度范围
+    min_temp, max_temp = climate_temp_ranges[climate_zone_code][season_map[season_code]]
 
     if "Manual" in input_mode:
         # 自动计算合理默认值
@@ -205,14 +214,12 @@ if st.button("Start forecasting"):
     try:
         model = models[selected_model]
         
-        # 对输入数据进行归一化处理
-        scaler = StandardScaler()
-        scaled_df = scaler.fit_transform(df.drop('Projected results', axis=1))
-        scaled_df = pd.DataFrame(scaled_df, columns=df.columns[:-1])  # 将归一化后的数据转换回DataFrame
-
+        # 对输入数据进行归一化处理（使用预先加载的scaler）
+        scaled_df = scaler.transform(df)  # 直接转换，无需删除列
+        
         # 执行预测
         with st.spinner("Predictions are in progress, please wait..."):
-            predictions = model.predict(scaled_df)  # 使用归一化后的数据进行预测
+            predictions = model.predict(scaled_df)
             proba = model.predict_proba(scaled_df) if hasattr(model, "predict_proba") else None
 
         # 构建结果数据框
@@ -297,9 +304,15 @@ if st.button("Start forecasting"):
             comfort_levels = [(0, 1), (0, 2)]
             colors = ["#99ff99", "#ff9999"]
             plt.figure(figsize=(12, 6))
+            
             for i, (level1, level2) in enumerate(comfort_levels):
                 level_data1 = results_df[results_df["Projected results"] == level1]
                 level_data2 = results_df[results_df["Projected results"] == level2]
+                
+                # 跳过空数据集
+                if level_data1.empty or level_data2.empty:
+                    continue
+                    
                 mu_c1 = level_data1["Indoor Air Temperature"].mean()  # 计算平均值
                 sigma_c1 = level_data1["Indoor Air Temperature"].std()  # 计算标准差
                 mu_c2 = level_data2["Indoor Air Temperature"].mean()  # 计算平均值
