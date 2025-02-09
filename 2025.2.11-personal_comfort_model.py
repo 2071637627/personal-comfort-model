@@ -281,10 +281,10 @@ if st.button("Start forecasting"):
             if not zero_projected_results.empty:
                 min_temp_at_zero = zero_projected_results["Indoor Air Temperature"].min()
                 max_temp_at_zero = zero_projected_results["Indoor Air Temperature"].max()
-                plt.axvline(x=min_temp_at_zero, color=vline_color_min, linestyle=':', 
-                            label=f'Min Temp at Zero ({min_temp_at_zero:.2f}°C)')
-                plt.axvline(x=max_temp_at_zero, color=vline_color_max, linestyle=':', 
-                            label=f'Max Temp at Zero ({max_temp_at_zero:.2f}°C)')
+                #plt.axvline(x=min_temp_at_zero, color=vline_color_min, linestyle=':', 
+                            #label=f'Min Temp at Zero ({min_temp_at_zero:.2f}°C)')
+                #plt.axvline(x=max_temp_at_zero, color=vline_color_max, linestyle=':', 
+                            #label=f'Max Temp at Zero ({max_temp_at_zero:.2f}°C)')
             plt.legend()
             plt.title("Mapping of indoor air temperatures to predicted thermal preferences", fontsize=14)
             plt.xlabel("Indoor Air Temperature", fontsize=12)
