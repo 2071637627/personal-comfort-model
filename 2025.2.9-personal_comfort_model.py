@@ -91,8 +91,10 @@ with st.sidebar:
         ["Manual input", "Randomly generate (30)", "Randomly generate (50)", "Randomly generate (100)"]
     )
 
+
     # 气候分区温度范围
-    climate_temp_ranges = {
+    climate_code = int(Climate_Zone.split("(")[1].replace(")", ""))
+    temp_ranges = {
         0: {"Winter": (-20, 5), "Summer": (15, 25), "Transition": (5, 15)},
         1: {"Winter": (-10, 10), "Summer": (20, 30), "Transition": (10, 20)},
         2: {"Winter": (0, 10), "Summer": (25, 35), "Transition": (10, 25)},
@@ -100,7 +102,7 @@ with st.sidebar:
         4: {"Winter": (5, 15), "Summer": (20, 30), "Transition": (10, 25)}
     }
     season_map = {0: "Winter", 1: "Summer", 2: "Transition"}
-    min_temp, max_temp = climate_temp_ranges[int(Climate_Zone)][season_map[int(Season)]]
+    min_temp, max_temp = temp_ranges[int(Climate_Zone)][season_map[int(Season)]]
 
     if "Manual" in input_mode:
         # 自动计算合理默认值
