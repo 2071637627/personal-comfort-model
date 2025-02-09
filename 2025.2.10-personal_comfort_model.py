@@ -128,12 +128,12 @@ with st.sidebar:
         pie_color_2 = st.color_picker("Color for 'Cooler'", "#66b3ff")
     with st.sidebar.expander("Scatter Plot Colors", expanded=False):
         scatter_color = st.color_picker("Scatter point color", "#000000")
-        vline_color_min = st.color_picker("Vertical line color for min temperature", "blue")
-        vline_color_max = st.color_picker("Vertical line color for max temperature", "red")
+        vline_color_min = st.color_picker("Vertical line color for min temperature", "#0000FF")
+        vline_color_max = st.color_picker("Vertical line color for max temperature", "#FF0000")
     with st.sidebar.expander("Logistic Regression Curve Colors", expanded=False):
-        lr_color_0 = st.color_picker("Color for Thermal preference 0", "blue")
-        lr_color_1 = st.color_picker("Color for Thermal preference 1", "red")
-        lr_color_2 = st.color_picker("Color for Thermal preference 2", "green")
+        lr_color_0 = st.color_picker("Color for Thermal preference 0", "#0000FF")
+        lr_color_1 = st.color_picker("Color for Thermal preference 1", "#FF0000")
+        lr_color_2 = st.color_picker("Color for Thermal preference 2", "#008000")
 
 # ================= 数据处理模块 =================
 def generate_data():
