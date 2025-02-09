@@ -3,6 +3,9 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.stats import norm
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
 from PIL import Image
 
 # 允许加载高分辨率图片
@@ -14,9 +17,6 @@ models = {
     'XGBoost': joblib.load('xgb_model.pkl')
 }
 
-# 加载标准化器
-scaler = joblib.load('scaler.pkl')  # 确保与训练时使用的scaler一致
-
 # 页面配置
 st.set_page_config(
     page_title="Thermal comfort prediction system",
@@ -26,7 +26,7 @@ st.set_page_config(
 
 # ================= 侧边栏输入模块 =================
 with st.sidebar:
-    st.header("⚙️ Parameter Input Panel")
+    st.header("⚙ Parameter Input Panel")
 
     # 第一层级：Basic Identifiers
     st.subheader("1. Basic Identifiers")
@@ -38,7 +38,7 @@ with st.sidebar:
     Climate_Zone = st.selectbox(
         "Climate Zone",
         ["Severe cold zone (0)", "Cold zone (1)", "Hot summer and cold winter zone (2)",
-         "Hot summer and warm winter zone  (3)", "Mild zone (4)"],
+         "Hot summer and warm winter zone (3)", "Mild zone (4)"],
         index=0
     )
 
@@ -51,9 +51,9 @@ with st.sidebar:
     )
     Building_Operation_Mode = st.selectbox(
         "Building Operation Mode",
-        ["Air conditioning heating (0)", "Ceiling capillary heating (1)", 
-         "Cold radiation ceiling cooling (2)", "Convection cooling (3)",
-         "Convection heating (4)", "Furnace heating (5)", 
+        ["Air conditioning heating (0)", "Ceiling capillary heating (1)",
+         "Cold radiation ceiling cooling (2)", "onvection cooling (3)",
+         "onvection heating (4)", "Furnace heating (5)",
          "Naturally Ventilated (6)", "Others (7)",
          "Radiant floor heating (8)", "Radiator heating (9)",
          "self-heating (10)", "Split air conditioner (11)"],
@@ -68,8 +68,7 @@ with st.sidebar:
     with col2:
         Age = st.selectbox(
             "Age",
-            ["<18 (0)", "18-30 (1)", "31-40 (2)", 
-             "41-50 (3)", "51-60 (4)", ">61 (5)"],
+            ["<18 (0)", "18-30 (1)", "31-40 (2)", "41-50 (3)", "51-60 (4)", ">61 (5)"],
             index=1
         )
     
@@ -91,10 +90,8 @@ with st.sidebar:
         ["Manual input", "Randomly generate (30)", "Randomly generate (50)", "Randomly generate (100)"]
     )
 
-
     # 气候分区温度范围
-    climate_code = int(Climate_Zone.split("(")[1].replace(")", ""))
-    temp_ranges = {
+    climate_temp_ranges = {
         0: {"Winter": (-20, 5), "Summer": (15, 25), "Transition": (5, 15)},
         1: {"Winter": (-10, 10), "Summer": (20, 30), "Transition": (10, 20)},
         2: {"Winter": (0, 10), "Summer": (25, 35), "Transition": (10, 25)},
@@ -102,7 +99,7 @@ with st.sidebar:
         4: {"Winter": (5, 15), "Summer": (20, 30), "Transition": (10, 25)}
     }
     season_map = {0: "Winter", 1: "Summer", 2: "Transition"}
-    min_temp, max_temp = temp_ranges[int(Climate_Zone)][season_map[int(Season)]]
+    min_temp, max_temp = climate_temp_ranges[int(Climate_Zone)][season_map[int(Season)]]
 
     if "Manual" in input_mode:
         # 自动计算合理默认值
@@ -157,7 +154,6 @@ def generate_data():
 
     # 构建数据框（确保列顺序与训练时完全一致）
     feature_order = [
-        # 按训练数据实际列顺序排列（需根据训练数据调整）
         'Season',
         'Climate Zone',
         'Building Type',
@@ -210,8 +206,9 @@ if st.button("Start forecasting"):
         model = models[selected_model]
         
         # 对输入数据进行归一化处理
-        scaled_df = scaler.transform(df)  # 使用标准化器对数据进行归一化
-        scaled_df = pd.DataFrame(scaled_df, columns=df.columns)  # 将归一化后的数据转换回DataFrame
+        scaler = StandardScaler()
+        scaled_df = scaler.fit_transform(df.drop('Projected results', axis=1))
+        scaled_df = pd.DataFrame(scaled_df, columns=df.columns[:-1])  # 将归一化后的数据转换回DataFrame
 
         # 执行预测
         with st.spinner("Predictions are in progress, please wait..."):
@@ -263,8 +260,6 @@ if st.button("Start forecasting"):
             plt.scatter(
                 results_df["Indoor Air Temperature"],
                 results_df["Projected results"],
-                #c=results_df["Projected results"],
-                #cmap="coolwarm",
                 c='black',
                 alpha=0.7
             )
@@ -276,14 +271,13 @@ if st.button("Start forecasting"):
                 min_temp_at_zero = zero_projected_results["Indoor Air Temperature"].min()
                 max_temp_at_zero = zero_projected_results["Indoor Air Temperature"].max()
         
-        # 绘制两条竖向的点线
+            # 绘制两条竖向的点线
                 plt.axvline(x=min_temp_at_zero, color='blue', linestyle=':', label=f'Min Temp at Zero ({min_temp_at_zero:.2f}°C)')
                 plt.axvline(x=max_temp_at_zero, color='red', linestyle=':', label=f'Max Temp at Zero ({max_temp_at_zero:.2f}°C)')
     
             # 添加图例
             plt.legend()
             
-            #plt.colorbar(ticks=[0, 1, 2]).set_ticklabels(["No change", "Warmer", "Cooler"])
             plt.title("Mapping of indoor air temperatures to predicted thermal preferences", fontsize=14)
             plt.xlabel("Indoor Air Temperature", fontsize=12)
             plt.ylabel("Thermal preference", fontsize=12)
@@ -293,31 +287,37 @@ if st.button("Start forecasting"):
         # 下载结果
         st.download_button(
             label="Download full forecast results",
-            data=results_df.to_csv(index=False, encoding='utf-8-sig').encode('utf-8-sig'),
+            data=results_df.to_csv(index=False).encode('utf-8'),
             file_name=f'predictions_{selected_model}.csv',
             mime='text/csv'
         )
 
         # 绘制正态分布图
         with st.expander("📊 Thermal Comfort Probability Distribution"):
-            comfort_levels = [0, 1, 2]
-            colors = ["#99ff99", "#ff9999", "#66b3ff"]
+            comfort_levels = [(0, 1), (0, 2)]
+            colors = ["#99ff99", "#ff9999"]
             plt.figure(figsize=(12, 6))
-            for i, level in enumerate(comfort_levels):
-                level_data = results_df[results_df["Projected results"] == level]
-                mu_c = level_data["Indoor Air Temperature"].mean()
-                sigma_c = level_data["Indoor Air Temperature"].std()
-                temperatures = np.linspace(18, 35, 1000)
-                probabilities = (1 / (sigma_c * np.sqrt(2 * np.pi))) * np.exp(-((temperatures - mu_c) ** 2) / (2 * sigma_c ** 2))
-                plt.plot(temperatures, probabilities, label=f'Comfort Level {level} ({comfort_mapping[level]}) - Mean: {mu_c:.2f}, Variance: {sigma_c**2:.2f}', color=colors[i])
+            for i, (level1, level2) in enumerate(comfort_levels):
+                level_data1 = results_df[results_df["Projected results"] == level1]
+                level_data2 = results_df[results_df["Projected results"] == level2]
+                mu_c1 = level_data1["Indoor Air Temperature"].mean()  # 计算平均值
+                sigma_c1 = level_data1["Indoor Air Temperature"].std()  # 计算标准差
+                mu_c2 = level_data2["Indoor Air Temperature"].mean()  # 计算平均值
+                sigma_c2 = level_data2["Indoor Air Temperature"].std()  # 计算标准差
+                temperatures = np.linspace(18, 26, 1000)
+                # 使用累积分布函数（CDF）计算概率
+                cdf_values1 = norm.cdf(temperatures, mu_c1, sigma_c1)
+                cdf_values2 = norm.cdf(temperatures, mu_c2, sigma_c2)
+                plt.plot(temperatures, cdf_values1, label=f'Comfort Level {level1} ({comfort_mapping[level1]}) - Mean: {mu_c1:.2f}, Variance: {sigma_c1**2:.2f}', color=colors[i])
+                plt.plot(temperatures, cdf_values2, label=f'Comfort Level {level2} ({comfort_mapping[level2]}) - Mean: {mu_c2:.2f}, Variance: {sigma_c2**2:.2f}', linestyle='--', color=colors[i])
             
-            plt.title('Probability of Thermal Comfort')
+            plt.title('Cumulative Probability of Thermal Comfort')
             plt.xlabel('Indoor Temperature (°C)')
-            plt.ylabel('Probabilities')
+            plt.ylabel('Cumulative Probabilities')
             plt.grid(True)
             plt.legend()
             st.pyplot()
-            
+
     except Exception as e:
         st.error(f"预测失败：{str(e)}")
         st.error("可能原因：\n1. 输入数据格式错误\n2. 模型文件缺失\n3. 特征列不匹配")
