@@ -367,3 +367,27 @@ if st.button("Start forecasting"):
     except Exception as e:
         st.error(f"预测失败：{str(e)}")
         st.error("可能原因：\n1. 输入数据格式错误\n2. 模型文件缺失\n3. 特征列不匹配")
+
+# ================= 样式优化 =================
+st.markdown("""
+<style>
+    .stNumberInput, .stTextInput, .stSelectbox, .stRadio {
+        padding: 5px;
+        border-radius: 5px;
+    }
+    .stButton>button {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 24px;
+        border-radius: 5px;
+        border: none;
+    }
+    .stButton>button:hover {
+        background-color: #45a049;
+    }
+    .stAlert {
+        border-radius: 5px;
+        padding: 15px;
+    }
+</style>
+""", unsafe_allow_html=True)
