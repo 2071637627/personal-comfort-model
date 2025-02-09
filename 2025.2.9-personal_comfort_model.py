@@ -299,7 +299,7 @@ if st.button("Start forecasting"):
             mime='text/csv'
         )
 
-        # ================= 新增：建立逻辑回归曲线 =================
+        # ----------------- 新增：构造第三条平滑曲线 -----------------
         with st.expander("📈 Logistic Regression Curves", expanded=True):
             # 使用室内空气温度作为自变量
             # 构造温度范围，用于绘制平滑的概率曲线
@@ -325,18 +325,58 @@ if st.button("Start forecasting"):
             subset_02 = results_df[results_df["Projected results"].isin([0, 2])]
             X_02 = subset_02["Indoor Air Temperature"].values.reshape(-1, 1)
             y_02 = subset_02["Projected results"].values
-            # 为了构造二分类模型，将标签 2 转换为 1，其余保持为0
+            # 将标签2转换为1，其余保持为0（二分类）
             y_02_binary = np.where(y_02 == 2, 1, 0)
             
             lr_02 = LogisticRegression()
             lr_02.fit(X_02, y_02_binary)
-            # 对温度范围内的点预测类别（原标签2）对应的概率
+            # 对温度范围内的点预测标签1（原标签2转换后）的概率
             proba_02 = lr_02.predict_proba(temp_range)[:, 1]
             
             # 绘制两条逻辑回归概率曲线
             fig_lr, ax_lr = plt.subplots(figsize=(10, 6))
             ax_lr.plot(temp_range, proba_01, label="Logistic Regression (0 vs. 1)", color='blue')
             ax_lr.plot(temp_range, proba_02, label="Logistic Regression (0 vs. 2)", color='red', linestyle='--')
+            
+            # ----------------- 构造第三条曲线 -----------------
+            # 翻转两条回归曲线（关于 y=0.5 对称翻转）
+            flip_01 = 1 - proba_01
+            flip_02 = 1 - proba_02
+            
+            # 找到两条原始曲线与 0.5 的交点（取距离0.5最近的点）
+            idx_half_01 = np.argmin(np.abs(proba_01 - 0.5))
+            idx_half_02 = np.argmin(np.abs(proba_02 - 0.5))
+            T_half_01 = temp_range[idx_half_01][0]  # temp_range 为二维数组，需要取[0]
+            T_half_02 = temp_range[idx_half_02][0]
+            
+            # 将两交点分别作为 Indoor Air Temperature 的边界
+            T_min_val = min(T_half_01, T_half_02)
+            T_max_val = max(T_half_01, T_half_02)
+            
+            # 找到翻转曲线的交点：即 flip_01 和 flip_02 差值最小的位置
+            diff_flipped = np.abs(flip_01 - flip_02)
+            idx_peak = np.argmin(diff_flipped)
+            T_peak = temp_range[idx_peak][0]
+            P_peak = (flip_01[idx_peak] + flip_02[idx_peak]) / 2  # 两者平均作为最高点
+            
+            # 构造平滑曲线，要求经过三个点：(T_min_val, 0.5), (T_peak, P_peak), (T_max_val, 0.5)
+            pts_x = np.array([T_min_val, T_peak, T_max_val])
+            pts_y = np.array([0.5, P_peak, 0.5])
+            # 拟合二次多项式
+            poly_coeff = np.polyfit(pts_x, pts_y, 2)
+            # 在边界内生成平滑曲线数据
+            T_smooth = np.linspace(T_min_val, T_max_val, 1000)
+            smooth_curve = np.polyval(poly_coeff, T_smooth)
+            
+            # 在图上绘制第三条平滑曲线
+            ax_lr.plot(T_smooth, smooth_curve, label="Flipped Smooth Curve", color='green', linewidth=2, linestyle='-.')
+            
+            # 标记三个关键点
+            ax_lr.scatter([T_min_val, T_peak, T_max_val], [0.5, P_peak, 0.5], color='black', zorder=5)
+            for label, x_val, y_val in zip(['T_min', 'T_peak', 'T_max'], [T_min_val, T_peak, T_max_val], [0.5, P_peak, 0.5]):
+                ax_lr.annotate(label, (x_val, y_val), textcoords="offset points", xytext=(0,10), ha='center')
+            
+            # 设置图例和标签
             ax_lr.set_xlabel("Indoor Air Temperature (°C)", fontsize=12)
             ax_lr.set_ylabel("Predicted Probability", fontsize=12)
             ax_lr.set_title("Logistic Regression Curves for Thermal Preference", fontsize=14)
