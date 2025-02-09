@@ -307,73 +307,39 @@ if st.button("Start forecasting"):
                                      results_df["Indoor Air Temperature"].max(),
                                      1000).reshape(-1, 1)
             
-            # ----------------- Thermal preference 0 vs. 1 -----------------
-            # 筛选出标签为0和1的数据
-            subset_01 = results_df[results_df["Projected results"].isin([0, 1])]
-            # 使用“Indoor Air Temperature”作为唯一特征
-            X_01 = subset_01["Indoor Air Temperature"].values.reshape(-1, 1)
-            y_01 = subset_01["Projected results"].values  # 标签为0或1
             
-            # 建立逻辑回归模型
-            lr_01 = LogisticRegression()
-            lr_01.fit(X_01, y_01)
-            # 对温度范围内的点预测类别1的概率
-            proba_01 = lr_01.predict_proba(temp_range)[:, 1]  # 第1列为类别1的概率
 
-            # ----------------- Thermal preference 0 vs. 2 -----------------
-            # 筛选出标签为0和2的数据
-            subset_02 = results_df[results_df["Projected results"].isin([0, 2])]
-            X_02 = subset_02["Indoor Air Temperature"].values.reshape(-1, 1)
-            y_02 = subset_02["Projected results"].values
-            # 将标签2转换为1，其余保持为0（二分类）
-            y_02_binary = np.where(y_02 == 2, 1, 0)
-            
-            lr_02 = LogisticRegression()
-            lr_02.fit(X_02, y_02_binary)
-            # 对温度范围内的点预测标签1（原标签2转换后）的概率
-            proba_02 = lr_02.predict_proba(temp_range)[:, 1]
-            
-            # 绘制两条逻辑回归概率曲线
-            fig_lr, ax_lr = plt.subplots(figsize=(10, 6))
-            ax_lr.plot(temp_range, proba_01, label="Logistic Regression (0 vs. 1)", color='blue')
-            ax_lr.plot(temp_range, proba_02, label="Logistic Regression (0 vs. 2)", color='red', linestyle='--')
-            
-            # ----------------- 新增：构造第三条平滑曲线 -----------------
-        # 翻转两条回归曲线：关于 Predicted Probability = 0.5 翻转，
-        # 翻转公式：y_flipped = 2*0.5 - y = 1 - y
-        flip_01 = 1 - proba_01
-        flip_02 = 1 - proba_02
+        # ----------------- 新增：多项逻辑回归曲线 -----------------
+        with st.expander("📈 Multinomial Logistic Regression Curves", expanded=True):
+            # 使用“Indoor Air Temperature”作为唯一特征构造多项逻辑回归模型
+            X_multi = results_df["Indoor Air Temperature"].values.reshape(-1, 1)
+            y_multi = results_df["Projected results"].values  # 取 Thermal preference（0,1,2）
+    
+            # 建立多项逻辑回归模型（solver 可选 'lbfgs'、'newton-cg' 等，需支持 multi_class='multinomial'）
+            lr_multi = LogisticRegression(multi_class='multinomial', solver='lbfgs')
+            lr_multi.fit(X_multi, y_multi)
+    
+            # 构造温度范围，用于绘制平滑的预测概率曲线
+            temp_range_multi = np.linspace(results_df["Indoor Air Temperature"].min(),
+                                   results_df["Indoor Air Temperature"].max(),
+                                   1000).reshape(-1, 1)
+    
+            # 预测在各温度点下，各类别的概率，返回的数组形状为 (1000, 3)
+            proba_multi = lr_multi.predict_proba(temp_range_multi)
+    
+            # 绘制多项逻辑回归概率曲线
+            fig_multi, ax_multi = plt.subplots(figsize=(10, 6))
+            ax_multi.plot(temp_range_multi, proba_multi[:, 0], label="Thermal preference 0", color='blue', linewidth=2)
+            ax_multi.plot(temp_range_multi, proba_multi[:, 1], label="Thermal preference 1", color='red', linewidth=2)
+            ax_multi.plot(temp_range_multi, proba_multi[:, 2], label="Thermal preference 2", color='green', linewidth=2)
+    
+            ax_multi.set_xlabel("Indoor Air Temperature (°C)", fontsize=12)
+            ax_multi.set_ylabel("Predicted Probability", fontsize=12)
+            ax_multi.set_title("Multinomial Logistic Regression Curves for Thermal Preference", fontsize=14)
+            ax_multi.legend()
+            ax_multi.grid(linestyle="--", alpha=0.3)
+            st.pyplot(fig_multi)
 
-        # 寻找两条翻转曲线的交点：即两曲线差值绝对值最小时对应的温度（近似交点）
-        idx_peak = np.argmin(np.abs(flip_01 - flip_02))
-        x_peak = temp_range[idx_peak][0]
-        p_peak = (flip_01[idx_peak] + flip_02[idx_peak]) / 2  # 理论上两者应相等
-
-        # 使用平滑权重函数在两条翻转曲线之间平滑过渡
-        # 定义权重函数：w(x) = 1/(1+exp(k*(x - x_peak)))
-        # 当 x << x_peak 时 w ~ 1，此时第三条曲线取 flip_01 的值；
-        # 当 x >> x_peak 时 w ~ 0，此时第三条曲线取 flip_02 的值；
-        # 在 x = x_peak 时 w = 0.5，对应两者平均，即最高点
-        # 参数 k 控制过渡陡峭程度，这里可根据温度范围调整
-        k = 10 / (temp_range.max() - temp_range.min())
-        # 计算所有温度点处的权重
-        w = 1 / (1 + np.exp(k * (temp_range.flatten() - x_peak)))
-        # 构造第三条曲线：两部分按权重加权平均
-        third_curve = flip_01 * w + flip_02 * (1 - w)
-
-        # 在图中绘制第三条平滑曲线
-        ax_lr.plot(temp_range, third_curve, label="Smooth Third Curve", color='green', linewidth=2, linestyle='-.')
-
-        # 标记交点及左右边界
-        ax_lr.scatter([x_peak], [p_peak], color='black', zorder=5)
-        ax_lr.annotate("x_peak", (x_peak, p_peak), textcoords="offset points", xytext=(0,10), ha='center')
-            
-            # 设置图例和标签
-            ax_lr.set_xlabel("Indoor Air Temperature (°C)", fontsize=12)
-            ax_lr.set_ylabel("Predicted Probability", fontsize=12)
-            ax_lr.set_title("Logistic Regression Curves for Thermal Preference", fontsize=14)
-            ax_lr.legend()
-            st.pyplot(fig_lr)
 
     except Exception as e:
         st.error(f"预测失败：{str(e)}")
