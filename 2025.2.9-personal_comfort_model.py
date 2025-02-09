@@ -317,7 +317,7 @@ if st.button("Start forecasting"):
                 sigma_c1 = level_data1["Indoor Air Temperature"].std()  # 计算标准差
                 mu_c2 = level_data2["Indoor Air Temperature"].mean()  # 计算平均值
                 sigma_c2 = level_data2["Indoor Air Temperature"].std()  # 计算标准差
-                temperatures = np.linspace(18, 26, 1000)
+                temperatures = np.linspace(18, 35, 1000)
                 # 使用累积分布函数（CDF）计算概率
                 cdf_values1 = norm.cdf(temperatures, mu_c1, sigma_c1)
                 cdf_values2 = norm.cdf(temperatures, mu_c2, sigma_c2)
