@@ -338,43 +338,35 @@ if st.button("Start forecasting"):
             ax_lr.plot(temp_range, proba_01, label="Logistic Regression (0 vs. 1)", color='blue')
             ax_lr.plot(temp_range, proba_02, label="Logistic Regression (0 vs. 2)", color='red', linestyle='--')
             
-            # ----------------- 构造第三条曲线 -----------------
-            # 翻转两条回归曲线（关于 y=0.5 对称翻转）
-            flip_01 = 1 - proba_01
-            flip_02 = 1 - proba_02
-            
-            # 找到两条原始曲线与 0.5 的交点（取距离0.5最近的点）
-            idx_half_01 = np.argmin(np.abs(proba_01 - 0.5))
-            idx_half_02 = np.argmin(np.abs(proba_02 - 0.5))
-            T_half_01 = temp_range[idx_half_01][0]  # temp_range 为二维数组，需要取[0]
-            T_half_02 = temp_range[idx_half_02][0]
-            
-            # 将两交点分别作为 Indoor Air Temperature 的边界
-            T_min_val = min(T_half_01, T_half_02)
-            T_max_val = max(T_half_01, T_half_02)
-            
-            # 找到翻转曲线的交点：即 flip_01 和 flip_02 差值最小的位置
-            diff_flipped = np.abs(flip_01 - flip_02)
-            idx_peak = np.argmin(diff_flipped)
-            T_peak = temp_range[idx_peak][0]
-            P_peak = (flip_01[idx_peak] + flip_02[idx_peak]) / 2  # 两者平均作为最高点
-            
-            # 构造平滑曲线，要求经过三个点：(T_min_val, 0.5), (T_peak, P_peak), (T_max_val, 0.5)
-            pts_x = np.array([T_min_val, T_peak, T_max_val])
-            pts_y = np.array([0.5, P_peak, 0.5])
-            # 拟合二次多项式
-            poly_coeff = np.polyfit(pts_x, pts_y, 2)
-            # 在边界内生成平滑曲线数据
-            T_smooth = np.linspace(T_min_val, T_max_val, 1000)
-            smooth_curve = np.polyval(poly_coeff, T_smooth)
-            
-            # 在图上绘制第三条平滑曲线
-            ax_lr.plot(T_smooth, smooth_curve, label="Flipped Smooth Curve", color='green', linewidth=2, linestyle='-.')
-            
-            # 标记三个关键点
-            ax_lr.scatter([T_min_val, T_peak, T_max_val], [0.5, P_peak, 0.5], color='black', zorder=5)
-            for label, x_val, y_val in zip(['T_min', 'T_peak', 'T_max'], [T_min_val, T_peak, T_max_val], [0.5, P_peak, 0.5]):
-                ax_lr.annotate(label, (x_val, y_val), textcoords="offset points", xytext=(0,10), ha='center')
+            # ----------------- 新增：构造第三条平滑曲线 -----------------
+        # 翻转两条回归曲线：关于 Predicted Probability = 0.5 翻转，
+        # 翻转公式：y_flipped = 2*0.5 - y = 1 - y
+        flip_01 = 1 - proba_01
+        flip_02 = 1 - proba_02
+
+        # 寻找两条翻转曲线的交点：即两曲线差值绝对值最小时对应的温度（近似交点）
+        idx_peak = np.argmin(np.abs(flip_01 - flip_02))
+        x_peak = temp_range[idx_peak][0]
+        p_peak = (flip_01[idx_peak] + flip_02[idx_peak]) / 2  # 理论上两者应相等
+
+        # 使用平滑权重函数在两条翻转曲线之间平滑过渡
+        # 定义权重函数：w(x) = 1/(1+exp(k*(x - x_peak)))
+        # 当 x << x_peak 时 w ~ 1，此时第三条曲线取 flip_01 的值；
+        # 当 x >> x_peak 时 w ~ 0，此时第三条曲线取 flip_02 的值；
+        # 在 x = x_peak 时 w = 0.5，对应两者平均，即最高点
+        # 参数 k 控制过渡陡峭程度，这里可根据温度范围调整
+        k = 10 / (temp_range.max() - temp_range.min())
+        # 计算所有温度点处的权重
+        w = 1 / (1 + np.exp(k * (temp_range.flatten() - x_peak)))
+        # 构造第三条曲线：两部分按权重加权平均
+        third_curve = flip_01 * w + flip_02 * (1 - w)
+
+        # 在图中绘制第三条平滑曲线
+        ax_lr.plot(temp_range, third_curve, label="Smooth Third Curve", color='green', linewidth=2, linestyle='-.')
+
+        # 标记交点及左右边界
+        ax_lr.scatter([x_peak], [p_peak], color='black', zorder=5)
+        ax_lr.annotate("x_peak", (x_peak, p_peak), textcoords="offset points", xytext=(0,10), ha='center')
             
             # 设置图例和标签
             ax_lr.set_xlabel("Indoor Air Temperature (°C)", fontsize=12)
