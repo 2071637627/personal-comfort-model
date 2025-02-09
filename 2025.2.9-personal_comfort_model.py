@@ -299,37 +299,49 @@ if st.button("Start forecasting"):
             mime='text/csv'
         )
 
-        # 绘制正态分布图
-        with st.expander("📊 Thermal Comfort Probability Distribution"):
-            comfort_levels = [(0, 1), (0, 2)]
-            colors = ["#99ff99", "#ff9999"]
-            plt.figure(figsize=(12, 6))
+        # ================= 新增：建立逻辑回归曲线 =================
+        with st.expander("📈 Logistic Regression Curves", expanded=True):
+            # 使用室内空气温度作为自变量
+            # 构造温度范围，用于绘制平滑的概率曲线
+            temp_range = np.linspace(results_df["Indoor Air Temperature"].min(),
+                                     results_df["Indoor Air Temperature"].max(),
+                                     1000).reshape(-1, 1)
             
-            for i, (level1, level2) in enumerate(comfort_levels):
-                level_data1 = results_df[results_df["Projected results"] == level1]
-                level_data2 = results_df[results_df["Projected results"] == level2]
-                
-                # 跳过空数据集
-                if level_data1.empty or level_data2.empty:
-                    continue
-                    
-                mu_c1 = level_data1["Indoor Air Temperature"].mean()  # 计算平均值
-                sigma_c1 = level_data1["Indoor Air Temperature"].std()  # 计算标准差
-                mu_c2 = level_data2["Indoor Air Temperature"].mean()  # 计算平均值
-                sigma_c2 = level_data2["Indoor Air Temperature"].std()  # 计算标准差
-                temperatures = np.linspace(18, 35, 1000)
-                # 使用累积分布函数（CDF）计算概率
-                cdf_values1 = norm.cdf(temperatures, mu_c1, sigma_c1)
-                cdf_values2 = norm.cdf(temperatures, mu_c2, sigma_c2)
-                plt.plot(temperatures, cdf_values1, label=f'Comfort Level {level1} ({comfort_mapping[level1]}) - Mean: {mu_c1:.2f}, Variance: {sigma_c1**2:.2f}', color=colors[i])
-                plt.plot(temperatures, cdf_values2, label=f'Comfort Level {level2} ({comfort_mapping[level2]}) - Mean: {mu_c2:.2f}, Variance: {sigma_c2**2:.2f}', linestyle='--', color=colors[i])
+            # ----------------- Thermal preference 0 vs. 1 -----------------
+            # 筛选出标签为0和1的数据
+            subset_01 = results_df[results_df["Projected results"].isin([0, 1])]
+            # 使用“Indoor Air Temperature”作为唯一特征
+            X_01 = subset_01["Indoor Air Temperature"].values.reshape(-1, 1)
+            y_01 = subset_01["Projected results"].values  # 标签为0或1
             
-            plt.title('Cumulative Probability of Thermal Comfort')
-            plt.xlabel('Indoor Temperature (°C)')
-            plt.ylabel('Cumulative Probabilities')
-            plt.grid(True)
-            plt.legend()
-            st.pyplot()
+            # 建立逻辑回归模型
+            lr_01 = LogisticRegression()
+            lr_01.fit(X_01, y_01)
+            # 对温度范围内的点预测类别1的概率
+            proba_01 = lr_01.predict_proba(temp_range)[:, 1]  # 第1列为类别1的概率
+
+            # ----------------- Thermal preference 0 vs. 2 -----------------
+            # 筛选出标签为0和2的数据
+            subset_02 = results_df[results_df["Projected results"].isin([0, 2])]
+            X_02 = subset_02["Indoor Air Temperature"].values.reshape(-1, 1)
+            y_02 = subset_02["Projected results"].values
+            # 为了构造二分类模型，将标签 2 转换为 1，其余保持为0
+            y_02_binary = np.where(y_02 == 2, 1, 0)
+            
+            lr_02 = LogisticRegression()
+            lr_02.fit(X_02, y_02_binary)
+            # 对温度范围内的点预测类别（原标签2）对应的概率
+            proba_02 = lr_02.predict_proba(temp_range)[:, 1]
+            
+            # 绘制两条逻辑回归概率曲线
+            fig_lr, ax_lr = plt.subplots(figsize=(10, 6))
+            ax_lr.plot(temp_range, proba_01, label="Logistic Regression (0 vs. 1)", color='blue')
+            ax_lr.plot(temp_range, proba_02, label="Logistic Regression (0 vs. 2)", color='red', linestyle='--')
+            ax_lr.set_xlabel("Indoor Air Temperature (°C)", fontsize=12)
+            ax_lr.set_ylabel("Predicted Probability", fontsize=12)
+            ax_lr.set_title("Logistic Regression Curves for Thermal Preference", fontsize=14)
+            ax_lr.legend()
+            st.pyplot(fig_lr)
 
     except Exception as e:
         st.error(f"预测失败：{str(e)}")
