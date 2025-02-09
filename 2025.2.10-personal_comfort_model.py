@@ -314,18 +314,18 @@ if st.button("Start forecasting"):
             lr_multi.fit(X_multi, y_multi)
             
             # 显示每一条回归曲线的参数和回归公式
-            st.markdown("### 回归曲线参数与回归公式")
+            st.markdown("### Regression curve parameters and regression equation")
             intercepts = lr_multi.intercept_
             coefs = lr_multi.coef_  # shape (3, 1)
             # 遍历 3 个类别
             for idx in range(len(intercepts)):
                 intercept = intercepts[idx]
                 coef = coefs[idx][0]
-                st.markdown(f"**热舒适预测类别 {idx} （{comfort_mapping[idx]}）**")
-                st.write(f"截距 (β₀): {intercept:.4f}")
-                st.write(f"温度系数 (β₁): {coef:.4f}")
+                st.markdown(f"**Thermal preference {idx} （{comfort_mapping[idx]}）**")
+                st.write(f"Intercept (β₀): {intercept:.4f}")
+                st.write(f"Temperature coefficient (β₁): {coef:.4f}")
                 st.markdown(
-                    f"**回归公式:** $$p_{{{idx}}}(x)=\\frac{{\\exp({intercept:.4f}+{coef:.4f}x)}}{{\\exp({intercepts[0]:.4f}+{coefs[0][0]:.4f}x)+\\exp({intercepts[1]:.4f}+{coefs[1][0]:.4f}x)+\\exp({intercepts[2]:.4f}+{coefs[2][0]:.4f}x)}}$$"
+                    f"**Regression equation:** $$p_{{{idx}}}(x)=\\frac{{\\exp({intercept:.4f}+{coef:.4f}x)}}{{\\exp({intercepts[0]:.4f}+{coefs[0][0]:.4f}x)+\\exp({intercepts[1]:.4f}+{coefs[1][0]:.4f}x)+\\exp({intercepts[2]:.4f}+{coefs[2][0]:.4f}x)}}$$"
                 )
             
             # 绘制多项逻辑回归概率曲线
