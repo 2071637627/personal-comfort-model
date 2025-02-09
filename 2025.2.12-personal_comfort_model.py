@@ -7,7 +7,7 @@ from scipy.stats import norm
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from PIL import Image
-import io
+import io  # 用于图形下载
 
 # 允许加载高分辨率图片
 Image.MAX_IMAGE_PIXELS = None
@@ -15,10 +15,11 @@ Image.MAX_IMAGE_PIXELS = None
 # 加载模型
 models = {
     'LightGBM': joblib.load('lgbm_model.pkl'),
-    'XGBoost': joblib.load('xgb_model.pkl')
+    'XGBoost': joblib.load('xgb_model.pkl'),
+    'DT': joblib.load('dt_model.pkl')
 }
 
-scaler = joblib.load('scaler.pkl')
+scaler = joblib.load('scaler.pkl')  # 加载训练时保存的归一化器
 
 # 页面配置
 st.set_page_config(
@@ -77,14 +78,14 @@ with st.sidebar:
     
     col3, col4 = st.columns(2)
     with col3:
-        Height = st.number_input("Height (cm)", 100, 250, 170)
+        Height = st.number_input("Height", 100, 250, 170)
     with col4:
-        Weight = st.number_input("Weight (kg)", 30, 150, 65)
+        Weight = st.number_input("Weight", 30, 150, 65)
 
     # 第四层级：Subjective Thermal Comfort Information
     st.subheader("4. Subjective Thermal Comfort Information")
-    Clothing_Insulation = st.number_input("Clothing Insulation (clo)", 0.0, 2.0, 1.0, 0.1)
-    Metabolic_Rate = st.number_input("Metabolic Rate (met)", 0.5, 4.0, 1.2, 0.1)
+    Clothing_Insulation = st.number_input("Clothing Insulation", 0.0, 2.0, 1.0, 0.1)
+    Metabolic_Rate = st.number_input("Metabolic Rate", 0.5, 4.0, 1.2, 0.1)
 
     # 第五层级：Indoor Physical Parameters
     st.subheader("5. Indoor Physical Parameters")
@@ -106,6 +107,35 @@ with st.sidebar:
     season_map = {0: "Winter", 1: "Summer", 2: "Transition"}
     min_temp, max_temp = climate_temp_ranges[climate_zone_code][season_map[season_code]]
 
+    if "Manual" in input_mode:
+        default_temp = np.clip(15.0, min_temp, max_temp)
+        Mean_Daily_Outdoor_Temperature = st.number_input(
+            "Mean Daily Outdoor Temperature",
+            min_value=float(min_temp),
+            max_value=float(max_temp),
+            value=default_temp,
+            step=0.5,
+            format="%.1f",
+            help=f"Effective range of current climate zones：{min_temp}°C ~ {max_temp}°C"
+        )
+    else:
+        st.info(f"Outdoor temperature generation range：{min_temp}°C ~ {max_temp}°C")
+    
+    # ===== 图表颜色设置模块 =====
+    st.header("🎨 Chart Color Settings")
+    with st.expander("Pie Chart Colors", expanded=False):
+        pie_color_0 = st.color_picker("Color for 'No change'", "#99ff99")
+        pie_color_1 = st.color_picker("Color for 'Warmer'", "#ff9999")
+        pie_color_2 = st.color_picker("Color for 'Cooler'", "#66b3ff")
+    with st.expander("Scatter Plot Colors", expanded=False):
+        scatter_color = st.color_picker("Scatter point color", "#000000")
+        vline_color_min = st.color_picker("Vertical line color for min temperature", "#0000FF")
+        vline_color_max = st.color_picker("Vertical line color for max temperature", "#FF0000")
+    with st.expander("Logistic Regression Curve Colors", expanded=False):
+        lr_color_0 = st.color_picker("Color for Thermal preference 0", "#0000FF")
+        lr_color_1 = st.color_picker("Color for Thermal preference 1", "#FF0000")
+        lr_color_2 = st.color_picker("Color for Thermal preference 2", "#008000")
+
 # ================= 数据处理模块 =================
 def generate_data():
     """Generate data frames that are strictly consistent with the training features"""
@@ -123,66 +153,18 @@ def generate_data():
     }
     
     if "Manual input" in input_mode:
-        st.subheader("🌡️ Environmental Parameters Input")
-        col1, col2 = st.columns(2)
-        with col1:
-            indoor_temp_input = st.text_input(
-                "Indoor Air Temperature (℃, comma separated)", 
-                "25.0, 26.0, 24.5",
-                help=f"Valid range: 10.0-40.0℃"
-            )
-            indoor_humidity_input = st.text_input(
-                "Indoor Relative Humidity (%RH, comma separated)",
-                "50.0, 55.0, 60.0",
-                help="Valid range: 0.0-100.0%"
-            )
-        with col2:
-            indoor_air_velocity_input = st.text_input(
-                "Indoor Air Velocity (m/s, comma separated)",
-                "0.1, 0.2, 0.15",
-                help="Valid range: 0.0-5.0m/s"
-            )
-            mean_outdoor_temp_input = st.text_input(
-                f"Outdoor Temperature (℃, comma separated)",
-                f"{min_temp+5:.1f}, {max_temp-5:.1f}, {(min_temp+max_temp)/2:.1f}",
-                help=f"Climate range: {min_temp}~{max_temp}℃"
-            )
-
-        try:
-            # 数据转换和校验
-            env_params = {
-                'Indoor Air Temperature': [float(x.strip()) for x in indoor_temp_input.split(',')],
-                'Indoor Relative Humidity': [float(x.strip()) for x in indoor_humidity_input.split(',')],
-                'Indoor Air Velocity': [float(x.strip()) for x in indoor_air_velocity_input.split(',')],
-                'Mean Daily Outdoor Temperature': [float(x.strip()) for x in mean_outdoor_temp_input.split(',')]
-            }
-            
-            # 校验数据长度一致性
-            param_lengths = [len(v) for v in env_params.values()]
-            if len(set(param_lengths)) > 1:
-                raise ValueError("所有参数必须包含相同数量的数值")
-                
-            # 校验数值范围
-            for temp in env_params['Indoor Air Temperature']:
-                if not (10.0 <= temp <= 40.0):
-                    raise ValueError(f"室内温度{temp}℃超出有效范围（10.0-40.0℃）")
-                    
-            for temp in env_params['Mean Daily Outdoor Temperature']:
-                if not (min_temp <= temp <= max_temp):
-                    raise ValueError(f"室外温度{temp}℃超出气候分区范围（{min_temp}-{max_temp}℃）")
-
-            for rh in env_params['Indoor Relative Humidity']:
-                if not (0.0 <= rh <= 100.0):
-                    raise ValueError(f"相对湿度{rh}%超出有效范围（0-100%）")
-
-            for vel in env_params['Indoor Air Velocity']:
-                if not (0.0 <= vel <= 5.0):
-                    raise ValueError(f"空气流速{vel}m/s超出有效范围（0.0-5.0m/s）")
-
-        except Exception as e:
-            st.error(f"输入数据错误: {str(e)}")
-            st.stop()
-
+        # 手动输入模式，允许用户输入多行数据
+        st.sidebar.subheader("Enter multiple data rows:")
+        data_rows = []
+        num_rows = st.sidebar.number_input("Number of rows", min_value=1, value=1)
+        for i in range(num_rows):
+            with st.sidebar.expander(f"Row {i+1}"):
+                indoor_temp = st.number_input("Indoor Air Temperature", 10.0, 40.0, 25.0, key=f"temp_{i}")
+                indoor_humidity = st.number_input("Indoor Relative Humidity", 0.0, 100.0, 50.0, key=f"humidity_{i}")
+                indoor_velocity = st.number_input("Indoor Air Velocity", 0.0, 5.0, 0.1, key=f"velocity_{i}")
+                data_rows.append([indoor_temp, indoor_humidity, indoor_velocity, Mean_Daily_Outdoor_Temperature])
+        
+        env_params = pd.DataFrame(data_rows, columns=['Indoor Air Temperature', 'Indoor Relative Humidity', 'Indoor Air Velocity', 'Mean Daily Outdoor Temperature'])
     else:
         n_samples = int(input_mode.split("(")[1].replace(")", ""))
         np.random.seed(42)
@@ -192,6 +174,7 @@ def generate_data():
             'Indoor Air Velocity': np.round(np.random.uniform(0, 1.5, n_samples), 2).tolist(),
             'Mean Daily Outdoor Temperature': np.round(np.random.uniform(min_temp, max_temp, n_samples), 1).tolist()
         }
+        env_params = pd.DataFrame(env_params)
 
     feature_order = [
         'Season',
@@ -211,116 +194,211 @@ def generate_data():
     ]
     
     df = pd.DataFrame({**codes, **env_params})
+    for col in df.columns:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+    if set(df.columns) != set(feature_order):
+        missing_columns = set(feature_order) - set(df.columns)
+        raise ValueError(f"Missing in the data box：{missing_columns}")
     return df[feature_order]
 
 # ================= 主界面显示模块 =================
 st.title("🏢 Intelligent Prediction System for Building Thermal Comfort")
 df = generate_data()
 
-with st.expander("📥 View Input Data", expanded=True):
+with st.expander("📥 Viewing Input Data", expanded=True):
     st.dataframe(df.style.format("{:.1f}"), height=300)
     st.download_button(
-        label="Download Input Data",
+        label="Download input data",
         data=df.to_csv(index=False).encode('utf-8'),
         file_name='input_data.csv'
     )
 
 # ================= 预测分析模块 =================
-st.header("🔮 Predictive Analysis")
-selected_model = st.selectbox("Select Prediction Model", list(models.keys()))
+st.header("🔮 Predictive analysis")
+selected_model = st.selectbox("Selecting a Predictive Model", list(models.keys()))
 
-if st.button("Start Prediction"):
+if st.button("Start forecasting"):
     try:
-        with st.spinner("🔮 Predicting..."):
-            # 数据预处理
-            scaled_df = scaler.transform(df)
-            
-            # 模型预测
-            model = models[selected_model]
+        model = models[selected_model]
+        # 对输入数据进行归一化处理
+        scaled_df = scaler.transform(df)
+        
+        with st.spinner("Predictions are in progress, please wait..."):
             predictions = model.predict(scaled_df)
             proba = model.predict_proba(scaled_df) if hasattr(model, "predict_proba") else None
 
-            # 构建结果数据框
-            results_df = df.copy()
-            results_df["Predicted Class"] = predictions
-            results_df["Comfort Evaluation"] = results_df["Predicted Class"].map({
-                0: "No change",
-                1: "Warmer",
-                2: "Cooler"
-            })
+        results_df = df.copy()
+        results_df["Projected results"] = predictions
+        comfort_mapping = {
+            0: "No change",
+            1: "Warmer",
+            2: "Cooler"
+        }
+        results_df["Comfort Evaluation"] = results_df["Projected results"].map(comfort_mapping)
+        st.session_state.results_df = results_df
+        st.session_state.input_mode = input_mode
 
-            # 显示结果
-            st.success("✅ Prediction Completed!")
+        with st.expander("📊 View detailed forecast results", expanded=True):
+            def highlight_tp(val):
+                colors = {0: '#e6ffe6', 1: '#ffe6e6', 2: '#e6f3ff'}
+                return f'background-color: {colors.get(val, "")}'
+            styled_df = results_df.style.applymap(highlight_tp, subset=["Projected results"])
+            st.dataframe(styled_df, height=300)
+
+        st.subheader("📈 Analyzing Charts")
+        col1, col2 = st.columns(2)
+        
+        # =========== 图形1：预测结果分布饼图 ===========
+        with col1:
+            fig1 = plt.figure(figsize=(8, 6))
+            results_df["Comfort Evaluation"].value_counts().plot.pie(
+                autopct="%1.1f%%",
+                colors=[pie_color_0, pie_color_1, pie_color_2],
+                startangle=90,
+                textprops={"fontsize": 12}
+            )
+            plt.title("Distribution of forecast results", fontsize=14)
+            plt.ylabel("", fontsize=12)
+            st.pyplot(fig1)
             
-            with st.expander("📊 View Detailed Results", expanded=True):
-                def highlight_tp(val):
-                    colors = {0: '#e6ffe6', 1: '#ffe6e6', 2: '#e6f3ff'}
-                    return f'background-color: {colors.get(val, "")}'
-                styled_df = results_df.style.applymap(highlight_tp, subset=["Predicted Class"])
-                st.dataframe(styled_df, height=300)
-
-            # 图表显示
-            st.subheader("📈 Analysis Charts")
-            col1, col2 = st.columns(2)
-            
-            # 饼图
-            with col1:
-                fig1 = plt.figure(figsize=(8, 6))
-                results_df["Comfort Evaluation"].value_counts().plot.pie(
-                    autopct="%1.1f%%",
-                    colors=["#99ff99", "#ff9999", "#66b3ff"],
-                    startangle=90
-                )
-                plt.title("Prediction Results Distribution")
-                st.pyplot(fig1)
-
-            # 散点图
-            with col2:
-                fig2 = plt.figure(figsize=(8, 6))
-                plt.scatter(
-                    results_df["Indoor Air Temperature"],
-                    results_df["Predicted Class"],
-                    c="#000000",
-                    alpha=0.7
-                )
-                plt.title("Temperature vs Thermal Preference")
-                plt.xlabel("Indoor Air Temperature (°C)")
-                plt.ylabel("Thermal Preference")
-                plt.grid(linestyle="--", alpha=0.3)
-                st.pyplot(fig2)
-
-            # 下载功能
+            # 下载饼图
+            buf1 = io.BytesIO()
+            fig1.savefig(buf1, format='png')
+            buf1.seek(0)
             st.download_button(
-                label="Download Full Results",
-                data=results_df.to_csv(index=False).encode('utf-8'),
-                file_name=f'predictions_{selected_model}.csv',
-                mime='text/csv'
+                label="Download Pie Chart",
+                data=buf1,
+                file_name="pie_chart.png",
+                mime="image/png"
             )
 
-    except Exception as e:
-        st.error(f"Prediction failed: {str(e)}")
-        st.error("Possible causes:\n1. Invalid input data format\n2. Missing model files\n3. Feature mismatch")
+        # =========== 图形2：温度-舒适度散点图 ===========
+        with col2:
+            fig2 = plt.figure(figsize=(8, 8))
+            plt.scatter(
+                results_df["Indoor Air Temperature"],
+                results_df["Projected results"],
+                c=scatter_color,
+                alpha=0.7
+            )
+            zero_projected_results = results_df[results_df["Projected results"] == 0]
+            if not zero_projected_results.empty:
+                min_temp_at_zero = zero_projected_results["Indoor Air Temperature"].min()
+                max_temp_at_zero = zero_projected_results["Indoor Air Temperature"].max()
+                #plt.axvline(x=min_temp_at_zero, color=vline_color_min, linestyle=':', 
+                            #label=f'Min Temp at Zero ({min_temp_at_zero:.2f}°C)')
+                #plt.axvline(x=max_temp_at_zero, color=vline_color_max, linestyle=':', 
+                            #label=f'Max Temp at Zero ({max_temp_at_zero:.2f}°C)')
+            plt.legend()
+            plt.title("Mapping of indoor air temperatures to predicted thermal preferences", fontsize=14)
+            plt.xlabel("Indoor Air Temperature", fontsize=12)
+            plt.ylabel("Thermal preference", fontsize=12)
+            plt.grid(linestyle="--", alpha=0.3)
+            st.pyplot(fig2)
+            
+            # 下载散点图
+            buf2 = io.BytesIO()
+            fig2.savefig(buf2, format='png')
+            buf2.seek(0)
+            st.download_button(
+                label="Download Scatter Plot",
+                data=buf2,
+                file_name="scatter_plot.png",
+                mime="image/png"
+            )
 
-# ================= 样式优化 =================
-st.markdown("""
-<style>
-    .stNumberInput, .stTextInput, .stSelectbox, .stRadio {
-        padding: 5px;
-        border-radius: 5px;
-    }
-    .stButton>button {
-        background-color: #4CAF50;
-        color: white;
-        padding: 10px 24px;
-        border-radius: 5px;
-        border: none;
-    }
-    .stButton>button:hover {
-        background-color: #45a049;
-    }
-    .stAlert {
-        border-radius: 5px;
-        padding: 15px;
-    }
-</style>
-""", unsafe_allow_html=True)
+        # 下载预测结果数据
+        st.download_button(
+            label="Download full forecast results",
+            data=results_df.to_csv(index=False).encode('utf-8'),
+            file_name=f'predictions_{selected_model}.csv',
+            mime='text/csv'
+        )
+
+    except Exception as e:
+        st.error(f"预测失败：{str(e)}")
+        st.error("可能原因：\n1. 输入数据格式错误\n2. 模型文件缺失\n3. 特征列不匹配")
+
+# ================= 逻辑回归生成模块 =================
+if 'results_df' in st.session_state:
+    results_df = st.session_state.results_df
+    input_mode = st.session_state.get('input_mode', 'Manual input')
+    unique_classes = results_df['Projected results'].nunique()
+    num_samples = len(results_df)
+    
+    can_generate = True
+    error_message = ""
+    
+    # 检查预测类别数量
+    if unique_classes < 2:
+        can_generate = False
+        error_message += "无法生成逻辑回归曲线：预测结果中需要至少两个不同的类别。\n"
+    
+    # 检查手动输入模式下的数据行数
+    if input_mode == "Manual input":
+        if num_samples < 3:
+            can_generate = False
+            error_message += "手动输入数据时至少需要3行数据。\n"
+    
+    # 显示错误信息
+    if error_message:
+        st.error(error_message)
+    
+    # 添加生成按钮
+    generate_button = st.button(
+        "开始生成个人舒适模型",
+        disabled=not can_generate
+    )
+    
+    if generate_button:
+        with st.expander("📈 Multinomial Logistic Regression Curves", expanded=True):
+            # 使用“Indoor Air Temperature”作为唯一特征构造多项逻辑回归模型
+            X_multi = results_df["Indoor Air Temperature"].values.reshape(-1, 1)
+            y_multi = results_df["Projected results"].values
+            lr_multi = LogisticRegression(multi_class='multinomial', solver='lbfgs')
+            lr_multi.fit(X_multi, y_multi)
+            
+            # 显示每一条回归曲线的参数和回归公式
+            st.markdown("### Regression curve parameters and regression equation")
+            intercepts = lr_multi.intercept_
+            coefs = lr_multi.coef_  # shape (3, 1)
+            # 遍历 3 个类别
+            for idx in range(len(intercepts)):
+                intercept = intercepts[idx]
+                coef = coefs[idx][0]
+                st.markdown(f"**Thermal preference {idx} （{comfort_mapping[idx]}）**")
+                st.write(f"Intercept (β₀): {intercept:.4f}")
+                st.write(f"Temperature coefficient (β₁): {coef:.4f}")
+                st.markdown(
+                    f"**Regression equation:** $$p_{{{idx}}}(x)=\\frac{{\\exp({intercept:.4f}+{coef:.4f}x)}}{{\\exp({intercepts[0]:.4f}+{coefs[0][0]:.4f}x)+\\exp({intercepts[1]:.4f}+{coefs[1][0]:.4f}x)+\\exp({intercepts[2]:.4f}+{coefs[2][0]:.4f}x)}}$$"
+                )
+            
+            # 绘制多项逻辑回归概率曲线
+            temp_range_multi = np.linspace(results_df["Indoor Air Temperature"].min(),
+                                           results_df["Indoor Air Temperature"].max(),
+                                           1000).reshape(-1, 1)
+            proba_multi = lr_multi.predict_proba(temp_range_multi)
+            fig_multi, ax_multi = plt.subplots(figsize=(10, 6))
+            ax_multi.plot(temp_range_multi, proba_multi[:, 0], label="Thermal preference 0", 
+                          color=lr_color_0, linewidth=2)
+            ax_multi.plot(temp_range_multi, proba_multi[:, 1], label="Thermal preference 1", 
+                          color=lr_color_1, linewidth=2)
+            ax_multi.plot(temp_range_multi, proba_multi[:, 2], label="Thermal preference 2", 
+                          color=lr_color_2, linewidth=2)
+            ax_multi.set_xlabel("Indoor Air Temperature (°C)", fontsize=12)
+            ax_multi.set_ylabel("Predicted Probability", fontsize=12)
+            ax_multi.set_title("Multinomial Logistic Regression Curves for Thermal Preference", fontsize=14)
+            ax_multi.legend()
+            ax_multi.grid(linestyle="--", alpha=0.3)
+            st.pyplot(fig_multi)
+            
+            # 下载逻辑回归曲线图
+            buf3 = io.BytesIO()
+            fig_multi.savefig(buf3, format='png')
+            buf3.seek(0)
+            st.download_button(
+                label="Download Logistic Regression Curve",
+                data=buf3,
+                file_name="logistic_regression_curve.png",
+                mime="image/png"
+            )
