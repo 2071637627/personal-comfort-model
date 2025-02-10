@@ -331,9 +331,10 @@ if st.button("Start forecasting"):
         for idx in range(len(intercepts)):
             intercept = intercepts[idx]
             coef = coefs[idx][0]
-            st.markdown(f"**Thermal preference {idx} （{
-            comfort_mapping[idx]}）**")
-            st.write(f"Intercept (β₀): {intercept:.4f}")st.write(f"Temperature coefficient (β₁): {coef:.4f}")st.markdown(
+            st.markdown(f"**Thermal preference {idx} （{comfort_mapping[idx]}）**")
+            st.write(f"Intercept (β₀): {intercept:.4f}")
+            st.write(f"Temperature coefficient (β₁): {coef:.4f}")
+            st.markdown(
                 f"**Regression equation:** $$p_{{{idx}}}(x)=\\frac{{\\exp({intercept:.4f}+{coef:.4f}x)}}{{\\exp({intercepts[0]:.4f}+{coefs[0][0]:.4f}x)+\\exp({intercepts[1]:.4f}+{coefs[1][0]:.4f}x)+\\exp({intercepts[2]:.4f}+{coefs[2][0]:.4f}x)}}$$"
             )
     
