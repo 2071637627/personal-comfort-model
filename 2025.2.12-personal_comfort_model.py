@@ -381,8 +381,8 @@ if st.button("Start forecasting"):
                     mime="image/png"
                 )
             else:
-                st.warning("数据量太少，无法生成多项逻辑回归曲线。请手动输入至少10个数据点。")
+                st.warning("The amount of data is too small to generate a multinomial logistic regression curve. Please manually enter at least 10 data points.")
 
     except Exception as e:
-        st.error(f"预测失败：{str(e)}")
-        st.error("可能原因：\n1. 输入数据格式错误\n2. 模型文件缺失\n3. 特征列不匹配")
+        st.error(f"Prediction Failure:{str(e)}")
+        st.error("Possible causes: \n1. input data format error \n2. model file missing \n3. feature column mismatch")
