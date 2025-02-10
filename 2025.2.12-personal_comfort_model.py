@@ -380,8 +380,8 @@ if st.button("Start forecasting"):
                     file_name="logistic_regression_curve.png",
                     mime="image/png"
                 )
-        else:
-            st.warning("数据量太少，无法生成多项逻辑回归曲线。请手动输入至少10个数据点。")
+            else:
+                st.warning("数据量太少，无法生成多项逻辑回归曲线。请手动输入至少10个数据点。")
 
     except Exception as e:
         st.error(f"预测失败：{str(e)}")
