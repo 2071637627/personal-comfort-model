@@ -351,15 +351,15 @@ if st.button("Start forecasting"):
 
                 fig_multi, ax_multi = plt.subplots(figsize=(10, 6))
 
-                if show_lr_0:
-                    ax_multi.plot(temp_range_multi, proba_multi[:, 0], label="Thermal preference 0",
-                                  color=lr_color_0, linewidth=2)
-                if show_lr_1:
-                    ax_multi.plot(temp_range_multi, proba_multi[:, 1], label="Thermal preference 1",
-                                  color=lr_color_1, linewidth=2)
-                if show_lr_2:
-                    ax_multi.plot(temp_range_multi, proba_multi[:, 2], label="Thermal preference 2",
-                                  color=lr_color_2, linewidth=2)
+                #if show_lr_0:
+                ax_multi.plot(temp_range_multi, proba_multi[:, 0], label="Thermal preference 0",
+                              color=lr_color_0, linewidth=2)
+                #if show_lr_1:
+                ax_multi.plot(temp_range_multi, proba_multi[:, 1], label="Thermal preference 1",
+                              color=lr_color_1, linewidth=2)
+                #if show_lr_2:
+                ax_multi.plot(temp_range_multi, proba_multi[:, 2], label="Thermal preference 2",
+                              color=lr_color_2, linewidth=2)
 
                 ax_multi.set_xlabel("Indoor Air Temperature (°C)", fontsize=12)
                 ax_multi.set_ylabel("Predicted Probability", fontsize=12)
