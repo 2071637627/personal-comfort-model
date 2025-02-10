@@ -282,10 +282,6 @@ if st.button("Start forecasting"):
             if not zero_projected_results.empty:
                 min_temp_at_zero = zero_projected_results["Indoor Air Temperature"].min()
                 max_temp_at_zero = zero_projected_results["Indoor Air Temperature"].max()
-                #plt.axvline(x=min_temp_at_zero, color=vline_color_min, linestyle=':', 
-                            #label=f'Min Temp at Zero ({min_temp_at_zero:.2f}°C)')
-                #plt.axvline(x=max_temp_at_zero, color=vline_color_max, linestyle=':', 
-                            #label=f'Max Temp at Zero ({max_temp_at_zero:.2f}°C)')
             plt.legend()
             plt.title("Mapping of indoor air temperatures to predicted thermal preferences", fontsize=14)
             plt.xlabel("Indoor Air Temperature", fontsize=12)
@@ -336,14 +332,14 @@ if st.button("Start forecasting"):
                     st.write(f"**Class {idx} ({comfort_mapping[idx]})**")
                     st.write(f"Intercept: {intercepts[idx]:.4f}, Coefficient: {coefs[idx][0]:.4f}")
                 
-                # 绘制曲线
-                temp_range_multi = np.linspace(results_df["Indoor Air Temperature"].min(),
-                                       results_df["Indoor Air Temperature"].max(),
-                                       1000).reshape(-1, 1)
-                proba_multi = lr_multi.predict_proba(temp_range_multi)
-    
+                # 初始化fig_multi和ax_multi
                 fig_multi, ax_multi = plt.subplots(figsize=(10, 6))
-    
+
+                temp_range_multi = np.linspace(results_df["Indoor Air Temperature"].min(),
+                                               results_df["Indoor Air Temperature"].max(),
+                                               1000).reshape(-1, 1)
+                proba_multi = lr_multi.predict_proba(temp_range_multi)
+
                 if show_lr_0:
                     ax_multi.plot(temp_range_multi, proba_multi[:, 0], label="Thermal preference 0", 
                                   color=lr_color_0, linewidth=2)
@@ -353,14 +349,14 @@ if st.button("Start forecasting"):
                 if show_lr_2:
                     ax_multi.plot(temp_range_multi, proba_multi[:, 2], label="Thermal preference 2", 
                                   color=lr_color_2, linewidth=2)
-        
+
                 ax_multi.set_xlabel("Indoor Air Temperature (°C)", fontsize=12)
                 ax_multi.set_ylabel("Predicted Probability", fontsize=12)
                 ax_multi.set_title("Multinomial Logistic Regression Curves for Thermal Preference", fontsize=14)
                 ax_multi.legend()
                 ax_multi.grid(linestyle="--", alpha=0.3)
                 st.pyplot(fig_multi)
-    
+
         # 下载逻辑回归曲线图
         buf3 = io.BytesIO()
         fig_multi.savefig(buf3, format='png')
@@ -375,4 +371,5 @@ if st.button("Start forecasting"):
     except Exception as e:
         st.error(f"预测失败：{str(e)}")
         st.error("可能原因：\n1. 输入数据格式错误\n2. 模型文件缺失\n3. 特征列不匹配")
+
 
