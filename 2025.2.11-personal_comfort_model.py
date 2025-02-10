@@ -321,51 +321,62 @@ if st.button("Start forecasting"):
             y_multi = results_df["Projected results"].values
             lr_multi = LogisticRegression(multi_class='multinomial', solver='lbfgs')
             lr_multi.fit(X_multi, y_multi)
-            
-            # 显示每一条回归曲线的参数和回归公式
-            st.markdown("### Regression curve parameters and regression equation")
-            intercepts = lr_multi.intercept_
-            coefs = lr_multi.coef_  # shape (3, 1)
-            # 遍历 3 个类别
-            for idx in range(len(intercepts)):
-                intercept = intercepts[idx]
-                coef = coefs[idx][0]
-                st.markdown(f"**Thermal preference {idx} （{comfort_mapping[idx]}）**")
-                st.write(f"Intercept (β₀): {intercept:.4f}")
-                st.write(f"Temperature coefficient (β₁): {coef:.4f}")
-                st.markdown(
-                    f"**Regression equation:** $$p_{{{idx}}}(x)=\\frac{{\\exp({intercept:.4f}+{coef:.4f}x)}}{{\\exp({intercepts[0]:.4f}+{coefs[0][0]:.4f}x)+\\exp({intercepts[1]:.4f}+{coefs[1][0]:.4f}x)+\\exp({intercepts[2]:.4f}+{coefs[2][0]:.4f}x)}}$$"
-                )
-            
-            # 绘制多项逻辑回归概率曲线
-            temp_range_multi = np.linspace(results_df["Indoor Air Temperature"].min(),
-                                           results_df["Indoor Air Temperature"].max(),
-                                           1000).reshape(-1, 1)
-            proba_multi = lr_multi.predict_proba(temp_range_multi)
-            fig_multi, ax_multi = plt.subplots(figsize=(10, 6))
-            ax_multi.plot(temp_range_multi, proba_multi[:, 0], label="Thermal preference 0", 
-                          color=lr_color_0, linewidth=2)
-            ax_multi.plot(temp_range_multi, proba_multi[:, 1], label="Thermal preference 1", 
-                          color=lr_color_1, linewidth=2)
-            ax_multi.plot(temp_range_multi, proba_multi[:, 2], label="Thermal preference 2", 
-                          color=lr_color_2, linewidth=2)
-            ax_multi.set_xlabel("Indoor Air Temperature (°C)", fontsize=12)
-            ax_multi.set_ylabel("Predicted Probability", fontsize=12)
-            ax_multi.set_title("Multinomial Logistic Regression Curves for Thermal Preference", fontsize=14)
-            ax_multi.legend()
-            ax_multi.grid(linestyle="--", alpha=0.3)
-            st.pyplot(fig_multi)
-            
-            # 下载逻辑回归曲线图
-            buf3 = io.BytesIO()
-            fig_multi.savefig(buf3, format='png')
-            buf3.seek(0)
-            st.download_button(
-                label="Download Logistic Regression Curve",
-                data=buf3,
-                file_name="logistic_regression_curve.png",
-                mime="image/png"
+    
+        # 显示每一条回归曲线的参数和回归公式
+        st.markdown("### Regression curve parameters and regression equation")
+        intercepts = lr_multi.intercept_
+        coefs = lr_multi.coef_  # shape (3, 1)
+        
+        # 遍历 3 个类别
+        for idx in range(len(intercepts)):
+            intercept = intercepts[idx]
+            coef = coefs[idx][0]
+            st.markdown(f"**Thermal preference {idx} （{
+            comfort_mapping[idx]}）**")
+            st.write(f"Intercept (β₀): {intercept:.4f}")st.write(f"Temperature coefficient (β₁): {coef:.4f}")st.markdown(
+                f"**Regression equation:** $$p_{{{idx}}}(x)=\\frac{{\\exp({intercept:.4f}+{coef:.4f}x)}}{{\\exp({intercepts[0]:.4f}+{coefs[0][0]:.4f}x)+\\exp({intercepts[1]:.4f}+{coefs[1][0]:.4f}x)+\\exp({intercepts[2]:.4f}+{coefs[2][0]:.4f}x)}}$$"
             )
+    
+        # 选择是否显示每条逻辑回归曲线
+        show_lr_0 = st.checkbox("Show Thermal preference 0 curve", value=True)
+        show_lr_1 = st.checkbox("Show Thermal preference 1 curve", value=True)
+        show_lr_2 = st.checkbox("Show Thermal preference 2 curve", value=True)
+    
+        # 绘制多项逻辑回归概率曲线
+        temp_range_multi = np.linspace(results_df["Indoor Air Temperature"].min(),
+                                       results_df["Indoor Air Temperature"].max(),
+                                       1000).reshape(-1, 1)
+        proba_multi = lr_multi.predict_proba(temp_range_multi)
+    
+        fig_multi, ax_multi = plt.subplots(figsize=(10, 6))
+    
+        if show_lr_0:
+            ax_multi.plot(temp_range_multi, proba_multi[:, 0], label="Thermal preference 0", 
+                      color=lr_color_0, linewidth=2)
+        if show_lr_1:
+            ax_multi.plot(temp_range_multi, proba_multi[:, 1], label="Thermal preference 1", 
+                      color=lr_color_1, linewidth=2)
+        if show_lr_2:
+            ax_multi.plot(temp_range_multi, proba_multi[:, 2], label="Thermal preference 2", 
+                      color=lr_color_2, linewidth=2)
+        
+        ax_multi.set_xlabel("Indoor Air Temperature (°C)", fontsize=12)
+        ax_multi.set_ylabel("Predicted Probability", fontsize=12)
+        ax_multi.set_title("Multinomial Logistic Regression Curves for Thermal Preference", fontsize=14)
+        ax_multi.legend()
+        ax_multi.grid(linestyle="--", alpha=0.3)
+        st.pyplot(fig_multi)
+    
+        # 下载逻辑回归曲线图
+        buf3 = io.BytesIO()
+        fig_multi.savefig(buf3, format='png')
+        buf3.seek(0)
+        st.download_button(
+            label="Download Logistic Regression Curve",
+            data=buf3,
+            file_name="logistic_regression_curve.png",
+            mime="image/png"
+        )
 
     except Exception as e:
         st.error(f"预测失败：{str(e)}")
