@@ -315,7 +315,7 @@ if st.button("Start forecasting"):
         # ----------------- 新增：多项逻辑回归曲线及参数显示 -----------------
         with st.expander("📈 Multinomial Logistic Regression Curves", expanded=True):
     # 检查是否为手动输入模式且数据量是否大于等于10
-            if "Manual" in input_mode and len(df) >= 10) or "Randomly" in input_mode:
+            if "Manual" in input_mode and len(df) >= 10 or "Randomly" in input_mode:
         # 使用“Indoor Air Temperature”作为唯一特征构造多项逻辑回归模型
                 X_multi = results_df["Indoor Air Temperature"].values.reshape(-1, 1)
                 y_multi = results_df["Projected results"].values
