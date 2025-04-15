@@ -103,21 +103,30 @@ def generate_data():
         'Mean Daily Outdoor Temperature': np.round(np.random.uniform(min_temp, max_temp, n_samples), 1).tolist()
     }
     env_params = pd.DataFrame(env_params)
+
+    df = pd.DataFrame({**codes, **env_params})
     
     feature_order = [
-        'Sex',
-        'Age_Category',
-        'Height',
-        'Weight',
-        'Clothing Insulation',
-        'Metabolic Rate',
-        'Indoor Air Temperature',
-        'Indoor Relative Humidity',
-        'Indoor Air Velocity',
-        'Mean Daily Outdoor Temperature'
+        'Sex': 'Column_0',
+        'Height': 'Column_1',
+        'Weight': 'Column_2',
+        'Clothing Insulation': 'Column_3',
+        'Metabolic Rate': 'Column_4',
+        'Indoor Air Temperature': 'Column_5',
+        'Indoor Relative Humidity': 'Column_6',
+        'Indoor Air Velocity': 'Column_7',
+        'Mean Daily Outdoor Temperature': 'Column_8',
+        'Age_Category': 'Column_9'
     ]
+
+    # 将列名映射到模型的特征名称
+    df.columns = [feature_mapping[col] for col in df.columns]
     
-    df = pd.DataFrame({**codes, **env_params})
+    # 确保列顺序与模型期望的顺序一致
+    df = df[loaded_model.feature_name_]
+    
+    return df
+    
     for col in df.columns:
         df[col] = pd.to_numeric(df[col], errors='coerce')
         
