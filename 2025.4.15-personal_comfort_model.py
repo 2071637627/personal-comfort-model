@@ -102,36 +102,17 @@ def generate_data():
         'Indoor Air Velocity': np.round(np.random.uniform(0, 1.5, n_samples), 2).tolist(),
         'Mean Daily Outdoor Temperature': np.round(np.random.uniform(min_temp, max_temp, n_samples), 1).tolist()
     }
-    env_params = pd.DataFrame(env_params)
-    
-    feature_order = [
-        'Sex',
-        'Age_Category',
-        'Height',
-        'Weight',
-        'Clothing Insulation',
-        'Metabolic Rate',
-        'Indoor Air Temperature',
-        'Indoor Relative Humidity',
-        'Indoor Air Velocity',
-        'Mean Daily Outdoor Temperature'
-    ]
-    
-    df = pd.DataFrame({**codes, **env_params})
-    for col in df.columns:
-        df[col] = pd.to_numeric(df[col], errors='coerce')
-        
-    if set(df.columns) != set(feature_order):
-        missing_columns = set(feature_order) - set(df.columns)
-        raise ValueError(f"Missing in the data box：{missing_columns}")
-    
-    # 按照 feature_order 的顺序重新排列列
-    df = df[feature_order]
-    
-    # 创建特征名称映射
+    env_params_df = pd.DataFrame(env_params)
+
+    # 创建静态参数数据框（关键修正）
+    codes_df = pd.DataFrame([codes] * n_samples)  # 将静态参数扩展为相同行数
+
+    # 合并数据
+    df = pd.concat([codes_df, env_params_df], axis=1)
+
+    # 特征名称映射
     feature_mapping = {
         'Sex': 'Column_0',
-        'Age_Category': 'Column_9',
         'Height': 'Column_1',
         'Weight': 'Column_2',
         'Clothing Insulation': 'Column_3',
@@ -139,13 +120,32 @@ def generate_data():
         'Indoor Air Temperature': 'Column_5',
         'Indoor Relative Humidity': 'Column_6',
         'Indoor Air Velocity': 'Column_7',
-        'Mean Daily Outdoor Temperature': 'Column_8'
+        'Mean Daily Outdoor Temperature': 'Column_8',
+        'Age_Category': 'Column_9'
     }
     
-    # 将列名映射到模型的特征名称
-    df.columns = [feature_mapping[col] for col in df.columns]
+    df = df.rename(columns=feature_mapping)
     
-    return df
+    # 模型要求的特征顺序（必须与训练时完全一致）
+    correct_feature_order = [
+        'Column_0',  # Sex
+        'Column_1',  # Height
+        'Column_2',  # Weight
+        'Column_3',  # Clothing Insulation
+        'Column_4',  # Metabolic Rate
+        'Column_5',  # Indoor Air Temperature
+        'Column_6',  # Indoor Relative Humidity
+        'Column_7',  # Indoor Air Velocity
+        'Column_8',  # Mean Daily Outdoor Temperature
+        'Column_9'   # Age_Category
+    ]
+    
+    # 验证特征完整性
+    missing_columns = set(correct_feature_order) - set(df.columns)
+    if missing_columns:
+        raise ValueError(f"缺失关键特征列：{missing_columns}")
+    
+    return df[correct_feature_order]  # 严格按顺序排列
 
 # ================= 主界面显示模块 =================
 st.title("🏢 Intelligent Prediction System for Building Thermal Comfort")
