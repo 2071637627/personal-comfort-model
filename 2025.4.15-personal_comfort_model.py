@@ -131,6 +131,7 @@ def generate_data():
     # 创建特征名称映射
     feature_mapping = {
         'Sex': 'Column_0',
+        'Age_Category': 'Column_9',
         'Height': 'Column_1',
         'Weight': 'Column_2',
         'Clothing Insulation': 'Column_3',
@@ -138,8 +139,7 @@ def generate_data():
         'Indoor Air Temperature': 'Column_5',
         'Indoor Relative Humidity': 'Column_6',
         'Indoor Air Velocity': 'Column_7',
-        'Mean Daily Outdoor Temperature': 'Column_8',
-        'Age_Category': 'Column_9'
+        'Mean Daily Outdoor Temperature': 'Column_8'
     }
     
     # 将列名映射到模型的特征名称
