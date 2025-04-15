@@ -220,7 +220,7 @@ if st.button("Start forecasting"):
         with col2:
             fig2 = plt.figure(figsize=(8, 8))
             plt.scatter(
-                results_df["Column_5"],  # 对应 Indoor Air Temperature
+                results_df["Indoor Air Temperature"],  # 对应 Indoor Air Temperature
                 results_df["Projected results"],
                 c=scatter_color,
                 alpha=0.7
