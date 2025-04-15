@@ -106,8 +106,9 @@ def generate_data():
 
     df = pd.DataFrame({**codes, **env_params})
     
-    feature_order = [
+    feature_mapping = {
         'Sex': 'Column_0',
+        'Age_Category': 'Column_9',
         'Height': 'Column_1',
         'Weight': 'Column_2',
         'Clothing Insulation': 'Column_3',
@@ -115,44 +116,18 @@ def generate_data():
         'Indoor Air Temperature': 'Column_5',
         'Indoor Relative Humidity': 'Column_6',
         'Indoor Air Velocity': 'Column_7',
-        'Mean Daily Outdoor Temperature': 'Column_8',
-        'Age_Category': 'Column_9'
-    ]
+        'Mean Daily Outdoor Temperature': 'Column_8'
+    }
 
-    # 将列名映射到模型的特征名称
+     # 将列名映射到模型的特征名称
     df.columns = [feature_mapping[col] for col in df.columns]
     
     # 确保列顺序与模型期望的顺序一致
     df = df[loaded_model.feature_name_]
     
-    return df
-    
+    # 确保所有列都是数值类型
     for col in df.columns:
         df[col] = pd.to_numeric(df[col], errors='coerce')
-        
-    if set(df.columns) != set(feature_order):
-        missing_columns = set(feature_order) - set(df.columns)
-        raise ValueError(f"Missing in the data box：{missing_columns}")
-    
-    # 按照 feature_order 的顺序重新排列列
-    df = df[feature_order]
-    
-    # 创建特征名称映射
-    #feature_mapping = {
-    #    'Sex': 'Column_0',
-    #    'Height': 'Column_1',
-    #    'Weight': 'Column_2',
-    #    'Clothing Insulation': 'Column_3',
-    #    'Metabolic Rate': 'Column_4',
-    #    'Indoor Air Temperature': 'Column_5',
-    #    'Indoor Relative Humidity': 'Column_6',
-    #    'Indoor Air Velocity': 'Column_7',
-    #    'Mean Daily Outdoor Temperature': 'Column_8',
-    #    'Age_Category': 'Column_9'
-    #}
-    
-    # 将列名映射到模型的特征名称
-    #df.columns = [feature_mapping[col] for col in df.columns]
     
     return df
 
