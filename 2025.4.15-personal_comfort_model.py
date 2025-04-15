@@ -60,6 +60,9 @@ with st.sidebar:
         "Input pattern", 
         ["Randomly generate (30)", "Randomly generate (50)", "Randomly generate (100)"]
     )
+    min_temp = -10  # 假设最小户外温度为 0°C
+    max_temp = 35  # 假设最大户外温度为 30°C
+    
     st.info(f"Outdoor temperature generation range：{min_temp}°C ~ {max_temp}°C")
 
     # ===== 新增：图表颜色设置 =====
