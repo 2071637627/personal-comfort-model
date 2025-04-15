@@ -83,35 +83,27 @@ with st.sidebar:
 
 # ================= 数据处理模块 =================
 def generate_data():
-    """生成与模型特征严格匹配的数据框"""
-    # 解析输入参数
-    sex_code = int(Sex.split("(")[1].replace(")", ""))
-    age_code = int(Age.split("(")[1].replace(")", ""))
+    """Generate data frames that are strictly consistent with the training features"""
+    codes = {
+        'Sex': int(Sex.split("(")[1].replace(")", "")),
+        'Age_Category': int(Age.split("(")[1].replace(")", "")),
+        'Height': Height,
+        'Weight': Weight,
+        'Clothing Insulation': Clothing_Insulation,
+        'Metabolic Rate': Metabolic_Rate
+    }
+    
+    # 始终使用随机生成模式
     n_samples = int(input_mode.split("(")[1].replace(")", ""))
-
-    # 静态参数（转换为列表）
-    static_features = {
-        'Sex': [sex_code] * n_samples,
-        'Age_Category': [age_code] * n_samples,
-        'Height': [Height] * n_samples,
-        'Weight': [Weight] * n_samples,
-        'Clothing Insulation': [Clothing_Insulation] * n_samples,
-        'Metabolic Rate': [Metabolic_Rate] * n_samples
-    }
-
-    # 环境参数（随机生成）
     np.random.seed(42)
-    env_features = {
-        'Indoor Air Temperature': np.round(np.random.uniform(10, 40, n_samples), 1),
-        'Indoor Relative Humidity': np.round(np.random.uniform(30, 80, n_samples), 1),
-        'Indoor Air Velocity': np.round(np.random.uniform(0, 1.5, n_samples), 2),
-        'Mean Daily Outdoor Temperature': np.round(np.random.uniform(min_temp, max_temp, n_samples), 1)
+    env_params = {
+        'Indoor Air Temperature': np.round(np.random.uniform(10, 40, n_samples), 1).tolist(),
+        'Indoor Relative Humidity': np.round(np.random.uniform(30, 80, n_samples), 1).tolist(),
+        'Indoor Air Velocity': np.round(np.random.uniform(0, 1.5, n_samples), 2).tolist(),
+        'Mean Daily Outdoor Temperature': np.round(np.random.uniform(min_temp, max_temp, n_samples), 1).tolist()
     }
-
-    # 合并数据
-    df = pd.DataFrame({**static_features, **env_features})
-
-    # 特征顺序验证
+    env_params = pd.DataFrame(env_params)
+    
     feature_order = [
         'Sex',
         'Age_Category',
@@ -124,27 +116,34 @@ def generate_data():
         'Indoor Air Velocity',
         'Mean Daily Outdoor Temperature'
     ]
-    assert set(df.columns) == set(feature_order), \
-        f"列缺失/多余：应有 {feature_order}，实际 {df.columns.tolist()}"
-
-    # 特征名称映射
-    feature_mapping = {
-        'Sex': 'Column_0',
-        'Height': 'Column_1',
-        'Weight': 'Column_2',
-        'Clothing Insulation': 'Column_3',
-        'Metabolic Rate': 'Column_4',
-        'Indoor Air Temperature': 'Column_5',
-        'Indoor Relative Humidity': 'Column_6',
-        'Indoor Air Velocity': 'Column_7',
-        'Mean Daily Outdoor Temperature': 'Column_8',
-        'Age_Category': 'Column_9'
-    }
-    df = df.rename(columns=feature_mapping)[
-        ['Column_0', 'Column_1', 'Column_2', 'Column_3',
-         'Column_4', 'Column_5', 'Column_6', 'Column_7',
-         'Column_8', 'Column_9']
-    ]
+    
+    df = pd.DataFrame({**codes, **env_params})
+    for col in df.columns:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+        
+    if set(df.columns) != set(feature_order):
+        missing_columns = set(feature_order) - set(df.columns)
+        raise ValueError(f"Missing in the data box：{missing_columns}")
+    
+    # 按照 feature_order 的顺序重新排列列
+    df = df[feature_order]
+    
+    # 创建特征名称映射
+    #feature_mapping = {
+    #    'Sex': 'Column_0',
+    #    'Height': 'Column_1',
+    #    'Weight': 'Column_2',
+    #    'Clothing Insulation': 'Column_3',
+    #    'Metabolic Rate': 'Column_4',
+    #    'Indoor Air Temperature': 'Column_5',
+    #    'Indoor Relative Humidity': 'Column_6',
+    #    'Indoor Air Velocity': 'Column_7',
+    #    'Mean Daily Outdoor Temperature': 'Column_8',
+    #    'Age_Category': 'Column_9'
+    #}
+    
+    # 将列名映射到模型的特征名称
+    #df.columns = [feature_mapping[col] for col in df.columns]
     
     return df
 
@@ -166,75 +165,100 @@ selected_model = st.selectbox("Selecting a Predictive Model", list(models.keys()
 
 if st.button("Start forecasting"):
     try:
-        # 数据验证
-        expected_columns = [
-            'Column_0', 'Column_1', 'Column_2', 'Column_3',
-            'Column_4', 'Column_5', 'Column_6', 'Column_7',
-            'Column_8', 'Column_9'
-        ]
-        assert df.columns.tolist() == expected_columns, \
-            f"特征列不匹配！当前列：{df.columns.tolist()}"
+        model = models[selected_model]
         
         # 对输入数据进行归一化处理
-        scaled_data = scaler.transform(df)
+        scaled_df = scaler.transform(df)
         
-        # 模型预测
-        model = models[selected_model]
-        predictions = model.predict(scaled_data)
-        proba = model.predict_proba(scaled_data) if hasattr(model, "predict_proba") else None
+        with st.spinner("Predictions are in progress, please wait..."):
+            predictions = model.predict(scaled_df)
+            proba = model.predict_proba(scaled_df) if hasattr(model, "predict_proba") else None
 
-        # 结果处理
-        results = pd.DataFrame({
-            'Indoor Temp': df['Column_5'],
-            'Prediction': predictions,
-            'Probability_0': proba[:,0] if proba is not None else None,
-            'Probability_1': proba[:,1] if proba is not None else None,
-            'Probability_2': proba[:,2] if proba is not None else None
-        })
-        results['Comfort Level'] = results['Prediction'].map({
+        results_df = df.copy()
+        results_df["Projected results"] = predictions
+        comfort_mapping = {
             0: "No change",
             1: "Warmer",
             2: "Cooler"
-        })
+        }
+        results_df["Comfort Evaluation"] = results_df["Projected results"].map(comfort_mapping)
 
-        # 结果可视化
-        st.subheader("📊 Prediction Distribution")
+        with st.expander("📊 View detailed forecast results", expanded=True):
+            def highlight_tp(val):
+                colors = {0: '#e6ffe6', 1: '#ffe6e6', 2: '#e6f3ff'}
+                return f'background-color: {colors.get(val, "")}'
+            styled_df = results_df.style.applymap(highlight_tp, subset=["Projected results"])
+            st.dataframe(styled_df, height=300)
+
+        st.subheader("📈 Analyzing Charts")
         col1, col2 = st.columns(2)
         
+        # =========== 图形1：预测结果分布饼图 ===========
         with col1:
-            fig1, ax1 = plt.subplots(figsize=(8,6))
-            results['Comfort Level'].value_counts().plot.pie(
-                autopct='%1.1f%%', colors=pie_colors, ax=ax1
+            fig1 = plt.figure(figsize=(8, 6))
+            results_df["Comfort Evaluation"].value_counts().plot.pie(
+                autopct="%1.1f%%",
+                colors=[pie_color_0, pie_color_1, pie_color_2],
+                startangle=90,
+                textprops={"fontsize": 12}
             )
+            plt.title("Distribution of forecast results", fontsize=14)
+            plt.ylabel("", fontsize=12)
             st.pyplot(fig1)
+            
+            # 下载饼图
+            buf1 = io.BytesIO()
+            fig1.savefig(buf1, format='png')
+            buf1.seek(0)
+            st.download_button(
+                label="Download Pie Chart",
+                data=buf1,
+                file_name="pie_chart.png",
+                mime="image/png"
+            )
 
+        # =========== 图形2：温度-舒适度散点图 ===========
         with col2:
-            fig2, ax2 = plt.subplots(figsize=(8,6))
-            ax2.scatter(
-                results['Indoor Temp'],
-                results['Prediction'],
+            fig2 = plt.figure(figsize=(8, 8))
+            plt.scatter(
+                results_df["Indoor Air Temperature"],  # 对应 Indoor Air Temperature
+                results_df["Projected results"],
                 c=scatter_color,
                 alpha=0.7
             )
-            ax2.set_xlabel("Indoor Temperature (°C)")
-            ax2.set_ylabel("Thermal Preference")
+            zero_projected_results = results_df[results_df["Projected results"] == 0]
+            if not zero_projected_results.empty:
+                min_temp_at_zero = zero_projected_results["Indoor Air Temperature"].min()
+                max_temp_at_zero = zero_projected_results["Indoor Air Temperature"].max()
+                #plt.axvline(x=min_temp_at_zero, color=vline_color_min, linestyle=':', 
+                            #label=f'Min Temp at Zero ({min_temp_at_zero:.2f}°C)')
+                #plt.axvline(x=max_temp_at_zero, color=vline_color_max, linestyle=':', 
+                            #label=f'Max Temp at Zero ({max_temp_at_zero:.2f}°C)')
+            plt.legend()
+            plt.title("Mapping of indoor air temperatures to predicted thermal preferences", fontsize=14)
+            plt.xlabel("Indoor Air Temperature", fontsize=12)
+            plt.ylabel("Thermal preference", fontsize=12)
+            plt.grid(linestyle="--", alpha=0.3)
             st.pyplot(fig2)
+            
+            # 下载散点图
+            buf2 = io.BytesIO()
+            fig2.savefig(buf2, format='png')
+            buf2.seek(0)
+            st.download_button(
+                label="Download Scatter Plot",
+                data=buf2,
+                file_name="scatter_plot.png",
+                mime="image/png"
+            )
 
-        # 下载结果
+        # 下载预测结果数据
         st.download_button(
-            label="Download Full Results",
-            data=results.to_csv(index=False).encode('utf-8'),
-            file_name='prediction_results.csv'
+            label="Download full forecast results",
+            data=results_df.to_csv(index=False).encode('utf-8'),
+            file_name=f'predictions_{selected_model}.csv',
+            mime='text/csv'
         )
-
-    except Exception as e:
-        st.error(f"Prediction Failed: {str(e)}")
-        st.error("""
-        **常见故障排除步骤**：
-        1. 检查所有输入参数是否在合理范围内
-        2. 验证模型文件与代码版本是否匹配
-        3. 确认特征列顺序与训练时一致
-        """)
 
         # ----------------- 新增：多项逻辑回归曲线及参数显示 -----------------
         with st.expander("📈 Multinomial Logistic Regression Curves", expanded=True):
