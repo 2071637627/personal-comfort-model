@@ -128,21 +128,21 @@ def generate_data():
     df = df[feature_order]
     
     # 创建特征名称映射
-    feature_mapping = {
-        'Sex': 'Column_0',
-        'Height': 'Column_1',
-        'Weight': 'Column_2',
-        'Clothing Insulation': 'Column_3',
-        'Metabolic Rate': 'Column_4',
-        'Indoor Air Temperature': 'Column_5',
-        'Indoor Relative Humidity': 'Column_6',
-        'Indoor Air Velocity': 'Column_7',
-        'Mean Daily Outdoor Temperature': 'Column_8',
-        'Age_Category': 'Column_9'
-    }
+    #feature_mapping = {
+    #    'Sex': 'Column_0',
+    #    'Height': 'Column_1',
+    #    'Weight': 'Column_2',
+    #    'Clothing Insulation': 'Column_3',
+    #    'Metabolic Rate': 'Column_4',
+    #    'Indoor Air Temperature': 'Column_5',
+    #    'Indoor Relative Humidity': 'Column_6',
+    #    'Indoor Air Velocity': 'Column_7',
+    #    'Mean Daily Outdoor Temperature': 'Column_8',
+    #    'Age_Category': 'Column_9'
+    #}
     
     # 将列名映射到模型的特征名称
-    df.columns = [feature_mapping[col] for col in df.columns]
+    #df.columns = [feature_mapping[col] for col in df.columns]
     
     return df
 
