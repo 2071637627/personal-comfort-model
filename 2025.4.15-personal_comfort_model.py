@@ -21,6 +21,14 @@ models = {
 
 scaler = joblib.load('minmax_scaler.pkl')  # 加载训练时保存的归一化器
 
+# 加载模型后添加
+try:
+    print("模型期望的特征：", model.feature_names_in_)
+    print("当前输入的特征：", df.columns.tolist())
+    assert np.array_equal(model.feature_names_in_, df.columns)
+except AttributeError:
+    st.warning("模型未记录特征名称，请确保训练时使用 sklearn≥1.0")
+
 # 页面配置
 st.set_page_config(
     page_title="Thermal comfort prediction system",
