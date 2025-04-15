@@ -119,6 +119,7 @@ def generate_data():
     df = pd.DataFrame({**codes, **env_params})
     for col in df.columns:
         df[col] = pd.to_numeric(df[col], errors='coerce')
+        
     if set(df.columns) != set(feature_order):
         missing_columns = set(feature_order) - set(df.columns)
         raise ValueError(f"Missing in the data box：{missing_columns}")
@@ -143,6 +144,8 @@ selected_model = st.selectbox("Selecting a Predictive Model", list(models.keys()
 if st.button("Start forecasting"):
     try:
         model = models[selected_model]
+        df.columns = scaler_feature_names
+        
         # 对输入数据进行归一化处理
         scaled_df = scaler.transform(df)
         
