@@ -89,8 +89,7 @@ def generate_data():
         'Metabolic Rate': Metabolic_Rate
     }
     
-    if "Manual input" in input_mode:
-        # 始终使用随机生成模式
+    # 始终使用随机生成模式
     n_samples = int(input_mode.split("(")[1].replace(")", ""))
     np.random.seed(42)
     env_params = {
@@ -100,7 +99,7 @@ def generate_data():
         'Mean Daily Outdoor Temperature': np.round(np.random.uniform(min_temp, max_temp, n_samples), 1).tolist()
     }
     env_params = pd.DataFrame(env_params)
-
+    
     feature_order = [
         'Sex',
         'Age_Category',
