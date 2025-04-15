@@ -85,7 +85,7 @@ def generate_data():
     """Generate data frames that are strictly consistent with the training features"""
     codes = {
         'Sex': int(Sex.split("(")[1].replace(")", "")),
-        'Age': int(Age.split("(")[1].replace(")", "")),
+        'Age_Category': int(Age.split("(")[1].replace(")", "")),
         'Height': Height,
         'Weight': Weight,
         'Clothing Insulation': Clothing_Insulation,
